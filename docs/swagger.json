@@ -1,0 +1,1289 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "A database-agnostic Dynamic Model and Diff-Based Schema Migration Engine supporting PostgreSQL, MongoDB, MySQL, and Memory adapters.",
+        "title": "Dynamic Model \u0026 Schema Migration Engine API",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "API Support",
+            "url": "http://www.example.com/support",
+            "email": "support@example.com"
+        },
+        "license": {
+            "name": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/",
+    "paths": {
+        "/api/data/{model}": {
+            "get": {
+                "description": "Find records with dynamic filters, sorting, and pagination",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Data"
+                ],
+                "summary": "Query records",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Model Name or ID",
+                        "name": "model",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page offset",
+                        "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort fields (e.g. name,-age)",
+                        "name": "sort",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Insert a new record validated and coerced against active Model definition",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Data"
+                ],
+                "summary": "Create dynamic record",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Model Name or ID",
+                        "name": "model",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Record Data",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/data/{model}/{id}": {
+            "get": {
+                "description": "Find an individual record by its primary key identifier",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Data"
+                ],
+                "summary": "Get record by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Model Name or ID",
+                        "name": "model",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Record ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Completely replace an existing record by its primary key identifier",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Data"
+                ],
+                "summary": "Full update record",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Model Name or ID",
+                        "name": "model",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Record ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated Record Data",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Remove a record by its primary key identifier",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Data"
+                ],
+                "summary": "Delete record",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Model Name or ID",
+                        "name": "model",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Record ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Update specific fields of an existing record by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Data"
+                ],
+                "summary": "Partial update record",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Model Name or ID",
+                        "name": "model",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Record ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Partial Data",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/models": {
+            "get": {
+                "description": "Get a list of all registered models (active and drafts)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Models"
+                ],
+                "summary": "List all models",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Register a new dynamic model metadata definition in DRAFT status",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Models"
+                ],
+                "summary": "Create a model draft",
+                "parameters": [
+                    {
+                        "description": "Model Definition",
+                        "name": "model",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.Model"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/model.Model"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/models/{model}": {
+            "get": {
+                "description": "Get draft or active definition of a model by ID or name",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Models"
+                ],
+                "summary": "Get model definition",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Model ID or Name",
+                        "name": "model",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Model"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Update the draft definition of a model before applying migrations",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Models"
+                ],
+                "summary": "Update model draft",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Model ID",
+                        "name": "model",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated Model Definition",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.Model"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Model"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete a model metadata definition from active and draft registries",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Models"
+                ],
+                "summary": "Delete model",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Model ID",
+                        "name": "model",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/models/{model}/schema": {
+            "get": {
+                "description": "Introspect the physical live schema in the target database",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Schema"
+                ],
+                "summary": "Get live database schema",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Model ID",
+                        "name": "model",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/schema.Schema"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/models/{model}/schema/apply": {
+            "post": {
+                "description": "Re-introspect, re-diff, apply minimal changes, verify, and activate model",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Schema"
+                ],
+                "summary": "Apply schema changes",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Model ID",
+                        "name": "model",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Apply Options",
+                        "name": "req",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/service.ApplyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/service.ApplyResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/models/{model}/schema/diff": {
+            "get": {
+                "description": "Calculate minimal diff between live database schema and desired model",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Schema"
+                ],
+                "summary": "Get schema difference",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Model ID",
+                        "name": "model",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Optional Renaming Hints",
+                        "name": "hints",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/diff.DiffHints"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/diff.SchemaDiff"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Calculate minimal diff between live database schema and desired model",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Schema"
+                ],
+                "summary": "Get schema difference",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Model ID",
+                        "name": "model",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Optional Renaming Hints",
+                        "name": "hints",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/diff.DiffHints"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/diff.SchemaDiff"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/models/{model}/schema/preview": {
+            "post": {
+                "description": "Generate native DDL statements (SQL/BSON) and safety analysis for changes",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Schema"
+                ],
+                "summary": "Preview schema migration",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Model ID",
+                        "name": "model",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Optional Renaming Hints",
+                        "name": "hints",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/diff.DiffHints"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/plan.SchemaPreview"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/models/{model}/schema/sync": {
+            "post": {
+                "description": "Introspect live database schema and synchronize the model definition",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Schema"
+                ],
+                "summary": "Sync model from DB",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Model ID",
+                        "name": "model",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Model"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "diff.DiffHints": {
+            "type": "object",
+            "properties": {
+                "renamed_columns": {
+                    "description": "OldName -\u003e NewName",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "renamed_tables": {
+                    "description": "OldName -\u003e NewName",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "diff.OperationType": {
+            "type": "string",
+            "enum": [
+                "CREATE_TABLE",
+                "DROP_TABLE",
+                "RENAME_TABLE",
+                "ADD_COLUMN",
+                "REMOVE_COLUMN",
+                "RENAME_COLUMN",
+                "ALTER_COLUMN_TYPE",
+                "ALTER_COLUMN_NULLABLE",
+                "ALTER_COLUMN_DEFAULT",
+                "ADD_PRIMARY_KEY",
+                "DROP_PRIMARY_KEY",
+                "ADD_INDEX",
+                "DROP_INDEX",
+                "ADD_FOREIGN_KEY",
+                "DROP_FOREIGN_KEY"
+            ],
+            "x-enum-varnames": [
+                "OpCreateTable",
+                "OpDropTable",
+                "OpRenameTable",
+                "OpAddColumn",
+                "OpRemoveColumn",
+                "OpRenameColumn",
+                "OpAlterColumnType",
+                "OpAlterColumnNullable",
+                "OpAlterColumnDefault",
+                "OpAddPrimaryKey",
+                "OpDropPrimaryKey",
+                "OpAddIndex",
+                "OpDropIndex",
+                "OpAddForeignKey",
+                "OpDropForeignKey"
+            ]
+        },
+        "diff.SafetyLevel": {
+            "type": "string",
+            "enum": [
+                "SAFE",
+                "POTENTIALLY_UNSAFE",
+                "DESTRUCTIVE"
+            ],
+            "x-enum-varnames": [
+                "SafetySafe",
+                "SafetyPotentiallyUnsafe",
+                "SafetyDestructive"
+            ]
+        },
+        "diff.SchemaDiff": {
+            "type": "object",
+            "properties": {
+                "current_schema": {
+                    "$ref": "#/definitions/schema.Schema"
+                },
+                "desired_schema": {
+                    "$ref": "#/definitions/schema.Schema"
+                },
+                "has_changes": {
+                    "type": "boolean"
+                },
+                "has_destructive": {
+                    "type": "boolean"
+                },
+                "operations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/diff.SchemaOperation"
+                    }
+                }
+            }
+        },
+        "diff.SchemaOperation": {
+            "type": "object",
+            "properties": {
+                "after": {},
+                "before": {},
+                "description": {
+                    "type": "string"
+                },
+                "destructive": {
+                    "type": "boolean"
+                },
+                "object_name": {
+                    "type": "string"
+                },
+                "old_name": {
+                    "type": "string"
+                },
+                "safety": {
+                    "$ref": "#/definitions/diff.SafetyLevel"
+                },
+                "target_table": {
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/diff.OperationType"
+                }
+            }
+        },
+        "model.Attribute": {
+            "type": "object",
+            "properties": {
+                "auto_increment": {
+                    "type": "boolean"
+                },
+                "comment": {
+                    "type": "string"
+                },
+                "default": {},
+                "length": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "nullable": {
+                    "type": "boolean"
+                },
+                "precision": {
+                    "type": "integer"
+                },
+                "primary_key": {
+                    "type": "boolean"
+                },
+                "scale": {
+                    "type": "integer"
+                },
+                "type": {
+                    "$ref": "#/definitions/model.DataType"
+                },
+                "unique": {
+                    "type": "boolean"
+                },
+                "validation": {
+                    "$ref": "#/definitions/model.RuleSet"
+                }
+            }
+        },
+        "model.DataType": {
+            "type": "string",
+            "enum": [
+                "STRING",
+                "TEXT",
+                "INT",
+                "LONG",
+                "FLOAT",
+                "DECIMAL",
+                "BOOLEAN",
+                "DATETIME",
+                "DATE",
+                "TIME",
+                "JSON",
+                "UUID",
+                "BINARY",
+                "ARRAY"
+            ],
+            "x-enum-varnames": [
+                "TypeString",
+                "TypeText",
+                "TypeInt",
+                "TypeLong",
+                "TypeFloat",
+                "TypeDecimal",
+                "TypeBoolean",
+                "TypeDateTime",
+                "TypeDate",
+                "TypeTime",
+                "TypeJSON",
+                "TypeUUID",
+                "TypeBinary",
+                "TypeArray"
+            ]
+        },
+        "model.Index": {
+            "type": "object",
+            "properties": {
+                "columns": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/model.IndexType"
+                },
+                "unique": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "model.IndexType": {
+            "type": "string",
+            "enum": [
+                "BTREE",
+                "HASH",
+                "UNIQUE",
+                "FULLTEXT"
+            ],
+            "x-enum-varnames": [
+                "IndexBTree",
+                "IndexHash",
+                "IndexUnique",
+                "IndexFullText"
+            ]
+        },
+        "model.Model": {
+            "type": "object",
+            "properties": {
+                "attributes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Attribute"
+                    }
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "database": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "indexes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Index"
+                    }
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "name": {
+                    "type": "string"
+                },
+                "relations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Relation"
+                    }
+                },
+                "status": {
+                    "$ref": "#/definitions/model.ModelStatus"
+                },
+                "storage_name": {
+                    "type": "string"
+                },
+                "storage_type": {
+                    "$ref": "#/definitions/model.StorageType"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.ModelStatus": {
+            "type": "string",
+            "enum": [
+                "DRAFT",
+                "VALIDATING",
+                "APPLYING",
+                "ACTIVE",
+                "FAILED",
+                "DEGRADED"
+            ],
+            "x-enum-varnames": [
+                "StatusDraft",
+                "StatusValidating",
+                "StatusApplying",
+                "StatusActive",
+                "StatusFailed",
+                "StatusDegraded"
+            ]
+        },
+        "model.Relation": {
+            "type": "object",
+            "properties": {
+                "foreign_key": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "on_delete": {
+                    "type": "string"
+                },
+                "on_update": {
+                    "type": "string"
+                },
+                "target_key": {
+                    "type": "string"
+                },
+                "target_model": {
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/model.RelationType"
+                }
+            }
+        },
+        "model.RelationType": {
+            "type": "string",
+            "enum": [
+                "ONE_TO_ONE",
+                "ONE_TO_MANY",
+                "MANY_TO_ONE",
+                "MANY_TO_MANY"
+            ],
+            "x-enum-varnames": [
+                "RelOneToOne",
+                "RelOneToMany",
+                "RelManyToOne",
+                "RelManyToMany"
+            ]
+        },
+        "model.RuleSet": {
+            "type": "object",
+            "properties": {
+                "enum": {
+                    "type": "array",
+                    "items": {}
+                },
+                "max": {
+                    "type": "number"
+                },
+                "max_length": {
+                    "type": "integer"
+                },
+                "min": {
+                    "type": "number"
+                },
+                "min_length": {
+                    "type": "integer"
+                },
+                "pattern": {
+                    "type": "string"
+                },
+                "required": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "model.StorageType": {
+            "type": "string",
+            "enum": [
+                "RELATIONAL",
+                "DOCUMENT",
+                "KEY_VALUE"
+            ],
+            "x-enum-varnames": [
+                "StorageRelational",
+                "StorageDocument",
+                "StorageKeyValue"
+            ]
+        },
+        "plan.NativeAction": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "destructive": {
+                    "type": "boolean"
+                },
+                "statement": {
+                    "type": "string"
+                },
+                "type": {
+                    "description": "SQL, BSON, COMMAND",
+                    "type": "string"
+                }
+            }
+        },
+        "plan.SchemaPreview": {
+            "type": "object",
+            "properties": {
+                "changes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/diff.SchemaOperation"
+                    }
+                },
+                "database": {
+                    "type": "string"
+                },
+                "has_destructive": {
+                    "type": "boolean"
+                },
+                "model_id": {
+                    "type": "string"
+                },
+                "native_actions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/plan.NativeAction"
+                    }
+                },
+                "requires_confirmation": {
+                    "type": "boolean"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "storage_name": {
+                    "type": "string"
+                },
+                "warnings": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "schema.Schema": {
+            "type": "object",
+            "properties": {
+                "attributes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schema.SchemaAttribute"
+                    }
+                },
+                "indexes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schema.SchemaIndex"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "primary_key": {
+                    "$ref": "#/definitions/schema.SchemaKey"
+                },
+                "raw_metadata": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "relations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schema.SchemaRelation"
+                    }
+                },
+                "storage_type": {
+                    "$ref": "#/definitions/model.StorageType"
+                }
+            }
+        },
+        "schema.SchemaAttribute": {
+            "type": "object",
+            "properties": {
+                "auto_increment": {
+                    "type": "boolean"
+                },
+                "comment": {
+                    "type": "string"
+                },
+                "default": {},
+                "extra": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "length": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "nullable": {
+                    "type": "boolean"
+                },
+                "precision": {
+                    "type": "integer"
+                },
+                "primary_key": {
+                    "type": "boolean"
+                },
+                "scale": {
+                    "type": "integer"
+                },
+                "type": {
+                    "$ref": "#/definitions/model.DataType"
+                },
+                "unique": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "schema.SchemaIndex": {
+            "type": "object",
+            "properties": {
+                "columns": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/model.IndexType"
+                },
+                "unique": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "schema.SchemaKey": {
+            "type": "object",
+            "properties": {
+                "columns": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "schema.SchemaRelation": {
+            "type": "object",
+            "properties": {
+                "column": {
+                    "type": "string"
+                },
+                "foreign_column": {
+                    "type": "string"
+                },
+                "foreign_table": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "on_delete": {
+                    "type": "string"
+                },
+                "on_update": {
+                    "type": "string"
+                }
+            }
+        },
+        "service.ApplyRequest": {
+            "type": "object",
+            "properties": {
+                "allow_destructive": {
+                    "type": "boolean"
+                },
+                "hints": {
+                    "$ref": "#/definitions/diff.DiffHints"
+                }
+            }
+        },
+        "service.ApplyResult": {
+            "type": "object",
+            "properties": {
+                "applied_changes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/diff.SchemaOperation"
+                    }
+                },
+                "database": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "model_id": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/model.ModelStatus"
+                },
+                "storage_name": {
+                    "type": "string"
+                },
+                "verified_schema": {
+                    "$ref": "#/definitions/schema.Schema"
+                }
+            }
+        }
+    }
+}

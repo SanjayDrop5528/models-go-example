@@ -1,0 +1,893 @@
+basePath: /
+definitions:
+  diff.DiffHints:
+    properties:
+      renamed_columns:
+        additionalProperties:
+          type: string
+        description: OldName -> NewName
+        type: object
+      renamed_tables:
+        additionalProperties:
+          type: string
+        description: OldName -> NewName
+        type: object
+    type: object
+  diff.OperationType:
+    enum:
+    - CREATE_TABLE
+    - DROP_TABLE
+    - RENAME_TABLE
+    - ADD_COLUMN
+    - REMOVE_COLUMN
+    - RENAME_COLUMN
+    - ALTER_COLUMN_TYPE
+    - ALTER_COLUMN_NULLABLE
+    - ALTER_COLUMN_DEFAULT
+    - ADD_PRIMARY_KEY
+    - DROP_PRIMARY_KEY
+    - ADD_INDEX
+    - DROP_INDEX
+    - ADD_FOREIGN_KEY
+    - DROP_FOREIGN_KEY
+    type: string
+    x-enum-varnames:
+    - OpCreateTable
+    - OpDropTable
+    - OpRenameTable
+    - OpAddColumn
+    - OpRemoveColumn
+    - OpRenameColumn
+    - OpAlterColumnType
+    - OpAlterColumnNullable
+    - OpAlterColumnDefault
+    - OpAddPrimaryKey
+    - OpDropPrimaryKey
+    - OpAddIndex
+    - OpDropIndex
+    - OpAddForeignKey
+    - OpDropForeignKey
+  diff.SafetyLevel:
+    enum:
+    - SAFE
+    - POTENTIALLY_UNSAFE
+    - DESTRUCTIVE
+    type: string
+    x-enum-varnames:
+    - SafetySafe
+    - SafetyPotentiallyUnsafe
+    - SafetyDestructive
+  diff.SchemaDiff:
+    properties:
+      current_schema:
+        $ref: '#/definitions/schema.Schema'
+      desired_schema:
+        $ref: '#/definitions/schema.Schema'
+      has_changes:
+        type: boolean
+      has_destructive:
+        type: boolean
+      operations:
+        items:
+          $ref: '#/definitions/diff.SchemaOperation'
+        type: array
+    type: object
+  diff.SchemaOperation:
+    properties:
+      after: {}
+      before: {}
+      description:
+        type: string
+      destructive:
+        type: boolean
+      object_name:
+        type: string
+      old_name:
+        type: string
+      safety:
+        $ref: '#/definitions/diff.SafetyLevel'
+      target_table:
+        type: string
+      type:
+        $ref: '#/definitions/diff.OperationType'
+    type: object
+  model.Attribute:
+    properties:
+      auto_increment:
+        type: boolean
+      comment:
+        type: string
+      default: {}
+      length:
+        type: integer
+      name:
+        type: string
+      nullable:
+        type: boolean
+      precision:
+        type: integer
+      primary_key:
+        type: boolean
+      scale:
+        type: integer
+      type:
+        $ref: '#/definitions/model.DataType'
+      unique:
+        type: boolean
+      validation:
+        $ref: '#/definitions/model.RuleSet'
+    type: object
+  model.DataType:
+    enum:
+    - STRING
+    - TEXT
+    - INT
+    - LONG
+    - FLOAT
+    - DECIMAL
+    - BOOLEAN
+    - DATETIME
+    - DATE
+    - TIME
+    - JSON
+    - UUID
+    - BINARY
+    - ARRAY
+    type: string
+    x-enum-varnames:
+    - TypeString
+    - TypeText
+    - TypeInt
+    - TypeLong
+    - TypeFloat
+    - TypeDecimal
+    - TypeBoolean
+    - TypeDateTime
+    - TypeDate
+    - TypeTime
+    - TypeJSON
+    - TypeUUID
+    - TypeBinary
+    - TypeArray
+  model.Index:
+    properties:
+      columns:
+        items:
+          type: string
+        type: array
+      name:
+        type: string
+      type:
+        $ref: '#/definitions/model.IndexType'
+      unique:
+        type: boolean
+    type: object
+  model.IndexType:
+    enum:
+    - BTREE
+    - HASH
+    - UNIQUE
+    - FULLTEXT
+    type: string
+    x-enum-varnames:
+    - IndexBTree
+    - IndexHash
+    - IndexUnique
+    - IndexFullText
+  model.Model:
+    properties:
+      attributes:
+        items:
+          $ref: '#/definitions/model.Attribute'
+        type: array
+      created_at:
+        type: string
+      database:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      indexes:
+        items:
+          $ref: '#/definitions/model.Index'
+        type: array
+      metadata:
+        additionalProperties: {}
+        type: object
+      name:
+        type: string
+      relations:
+        items:
+          $ref: '#/definitions/model.Relation'
+        type: array
+      status:
+        $ref: '#/definitions/model.ModelStatus'
+      storage_name:
+        type: string
+      storage_type:
+        $ref: '#/definitions/model.StorageType'
+      updated_at:
+        type: string
+      version:
+        type: integer
+    type: object
+  model.ModelStatus:
+    enum:
+    - DRAFT
+    - VALIDATING
+    - APPLYING
+    - ACTIVE
+    - FAILED
+    - DEGRADED
+    type: string
+    x-enum-varnames:
+    - StatusDraft
+    - StatusValidating
+    - StatusApplying
+    - StatusActive
+    - StatusFailed
+    - StatusDegraded
+  model.Relation:
+    properties:
+      foreign_key:
+        type: string
+      name:
+        type: string
+      on_delete:
+        type: string
+      on_update:
+        type: string
+      target_key:
+        type: string
+      target_model:
+        type: string
+      type:
+        $ref: '#/definitions/model.RelationType'
+    type: object
+  model.RelationType:
+    enum:
+    - ONE_TO_ONE
+    - ONE_TO_MANY
+    - MANY_TO_ONE
+    - MANY_TO_MANY
+    type: string
+    x-enum-varnames:
+    - RelOneToOne
+    - RelOneToMany
+    - RelManyToOne
+    - RelManyToMany
+  model.RuleSet:
+    properties:
+      enum:
+        items: {}
+        type: array
+      max:
+        type: number
+      max_length:
+        type: integer
+      min:
+        type: number
+      min_length:
+        type: integer
+      pattern:
+        type: string
+      required:
+        type: boolean
+    type: object
+  model.StorageType:
+    enum:
+    - RELATIONAL
+    - DOCUMENT
+    - KEY_VALUE
+    type: string
+    x-enum-varnames:
+    - StorageRelational
+    - StorageDocument
+    - StorageKeyValue
+  plan.NativeAction:
+    properties:
+      description:
+        type: string
+      destructive:
+        type: boolean
+      statement:
+        type: string
+      type:
+        description: SQL, BSON, COMMAND
+        type: string
+    type: object
+  plan.SchemaPreview:
+    properties:
+      changes:
+        items:
+          $ref: '#/definitions/diff.SchemaOperation'
+        type: array
+      database:
+        type: string
+      has_destructive:
+        type: boolean
+      model_id:
+        type: string
+      native_actions:
+        items:
+          $ref: '#/definitions/plan.NativeAction'
+        type: array
+      requires_confirmation:
+        type: boolean
+      status:
+        type: string
+      storage_name:
+        type: string
+      warnings:
+        items:
+          type: string
+        type: array
+    type: object
+  schema.Schema:
+    properties:
+      attributes:
+        items:
+          $ref: '#/definitions/schema.SchemaAttribute'
+        type: array
+      indexes:
+        items:
+          $ref: '#/definitions/schema.SchemaIndex'
+        type: array
+      name:
+        type: string
+      primary_key:
+        $ref: '#/definitions/schema.SchemaKey'
+      raw_metadata:
+        additionalProperties: {}
+        type: object
+      relations:
+        items:
+          $ref: '#/definitions/schema.SchemaRelation'
+        type: array
+      storage_type:
+        $ref: '#/definitions/model.StorageType'
+    type: object
+  schema.SchemaAttribute:
+    properties:
+      auto_increment:
+        type: boolean
+      comment:
+        type: string
+      default: {}
+      extra:
+        additionalProperties: {}
+        type: object
+      length:
+        type: integer
+      name:
+        type: string
+      nullable:
+        type: boolean
+      precision:
+        type: integer
+      primary_key:
+        type: boolean
+      scale:
+        type: integer
+      type:
+        $ref: '#/definitions/model.DataType'
+      unique:
+        type: boolean
+    type: object
+  schema.SchemaIndex:
+    properties:
+      columns:
+        items:
+          type: string
+        type: array
+      name:
+        type: string
+      type:
+        $ref: '#/definitions/model.IndexType'
+      unique:
+        type: boolean
+    type: object
+  schema.SchemaKey:
+    properties:
+      columns:
+        items:
+          type: string
+        type: array
+      name:
+        type: string
+    type: object
+  schema.SchemaRelation:
+    properties:
+      column:
+        type: string
+      foreign_column:
+        type: string
+      foreign_table:
+        type: string
+      name:
+        type: string
+      on_delete:
+        type: string
+      on_update:
+        type: string
+    type: object
+  service.ApplyRequest:
+    properties:
+      allow_destructive:
+        type: boolean
+      hints:
+        $ref: '#/definitions/diff.DiffHints'
+    type: object
+  service.ApplyResult:
+    properties:
+      applied_changes:
+        items:
+          $ref: '#/definitions/diff.SchemaOperation'
+        type: array
+      database:
+        type: string
+      message:
+        type: string
+      model_id:
+        type: string
+      status:
+        $ref: '#/definitions/model.ModelStatus'
+      storage_name:
+        type: string
+      verified_schema:
+        $ref: '#/definitions/schema.Schema'
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@example.com
+    name: API Support
+    url: http://www.example.com/support
+  description: A database-agnostic Dynamic Model and Diff-Based Schema Migration Engine
+    supporting PostgreSQL, MongoDB, MySQL, and Memory adapters.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://swagger.io/terms/
+  title: Dynamic Model & Schema Migration Engine API
+  version: "1.0"
+paths:
+  /api/data/{model}:
+    get:
+      description: Find records with dynamic filters, sorting, and pagination
+      parameters:
+      - description: Model Name or ID
+        in: path
+        name: model
+        required: true
+        type: string
+      - description: Page limit
+        in: query
+        name: limit
+        type: integer
+      - description: Page offset
+        in: query
+        name: offset
+        type: integer
+      - description: Sort fields (e.g. name,-age)
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Query records
+      tags:
+      - Data
+    post:
+      consumes:
+      - application/json
+      description: Insert a new record validated and coerced against active Model
+        definition
+      parameters:
+      - description: Model Name or ID
+        in: path
+        name: model
+        required: true
+        type: string
+      - description: Record Data
+        in: body
+        name: body
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Create dynamic record
+      tags:
+      - Data
+  /api/data/{model}/{id}:
+    delete:
+      description: Remove a record by its primary key identifier
+      parameters:
+      - description: Model Name or ID
+        in: path
+        name: model
+        required: true
+        type: string
+      - description: Record ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete record
+      tags:
+      - Data
+    get:
+      description: Find an individual record by its primary key identifier
+      parameters:
+      - description: Model Name or ID
+        in: path
+        name: model
+        required: true
+        type: string
+      - description: Record ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get record by ID
+      tags:
+      - Data
+    patch:
+      consumes:
+      - application/json
+      description: Update specific fields of an existing record by ID
+      parameters:
+      - description: Model Name or ID
+        in: path
+        name: model
+        required: true
+        type: string
+      - description: Record ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Partial Data
+        in: body
+        name: body
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Partial update record
+      tags:
+      - Data
+    put:
+      consumes:
+      - application/json
+      description: Completely replace an existing record by its primary key identifier
+      parameters:
+      - description: Model Name or ID
+        in: path
+        name: model
+        required: true
+        type: string
+      - description: Record ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated Record Data
+        in: body
+        name: body
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Full update record
+      tags:
+      - Data
+  /api/models:
+    get:
+      description: Get a list of all registered models (active and drafts)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: List all models
+      tags:
+      - Models
+    post:
+      consumes:
+      - application/json
+      description: Register a new dynamic model metadata definition in DRAFT status
+      parameters:
+      - description: Model Definition
+        in: body
+        name: model
+        required: true
+        schema:
+          $ref: '#/definitions/model.Model'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.Model'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Create a model draft
+      tags:
+      - Models
+  /api/models/{model}:
+    delete:
+      description: Delete a model metadata definition from active and draft registries
+      parameters:
+      - description: Model ID
+        in: path
+        name: model
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete model
+      tags:
+      - Models
+    get:
+      description: Get draft or active definition of a model by ID or name
+      parameters:
+      - description: Model ID or Name
+        in: path
+        name: model
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Model'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get model definition
+      tags:
+      - Models
+    put:
+      consumes:
+      - application/json
+      description: Update the draft definition of a model before applying migrations
+      parameters:
+      - description: Model ID
+        in: path
+        name: model
+        required: true
+        type: string
+      - description: Updated Model Definition
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.Model'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Model'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Update model draft
+      tags:
+      - Models
+  /api/models/{model}/schema:
+    get:
+      description: Introspect the physical live schema in the target database
+      parameters:
+      - description: Model ID
+        in: path
+        name: model
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/schema.Schema'
+      summary: Get live database schema
+      tags:
+      - Schema
+  /api/models/{model}/schema/apply:
+    post:
+      consumes:
+      - application/json
+      description: Re-introspect, re-diff, apply minimal changes, verify, and activate
+        model
+      parameters:
+      - description: Model ID
+        in: path
+        name: model
+        required: true
+        type: string
+      - description: Apply Options
+        in: body
+        name: req
+        schema:
+          $ref: '#/definitions/service.ApplyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.ApplyResult'
+      summary: Apply schema changes
+      tags:
+      - Schema
+  /api/models/{model}/schema/diff:
+    get:
+      consumes:
+      - application/json
+      description: Calculate minimal diff between live database schema and desired
+        model
+      parameters:
+      - description: Model ID
+        in: path
+        name: model
+        required: true
+        type: string
+      - description: Optional Renaming Hints
+        in: body
+        name: hints
+        schema:
+          $ref: '#/definitions/diff.DiffHints'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/diff.SchemaDiff'
+      summary: Get schema difference
+      tags:
+      - Schema
+    post:
+      consumes:
+      - application/json
+      description: Calculate minimal diff between live database schema and desired
+        model
+      parameters:
+      - description: Model ID
+        in: path
+        name: model
+        required: true
+        type: string
+      - description: Optional Renaming Hints
+        in: body
+        name: hints
+        schema:
+          $ref: '#/definitions/diff.DiffHints'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/diff.SchemaDiff'
+      summary: Get schema difference
+      tags:
+      - Schema
+  /api/models/{model}/schema/preview:
+    post:
+      consumes:
+      - application/json
+      description: Generate native DDL statements (SQL/BSON) and safety analysis for
+        changes
+      parameters:
+      - description: Model ID
+        in: path
+        name: model
+        required: true
+        type: string
+      - description: Optional Renaming Hints
+        in: body
+        name: hints
+        schema:
+          $ref: '#/definitions/diff.DiffHints'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/plan.SchemaPreview'
+      summary: Preview schema migration
+      tags:
+      - Schema
+  /api/models/{model}/schema/sync:
+    post:
+      description: Introspect live database schema and synchronize the model definition
+      parameters:
+      - description: Model ID
+        in: path
+        name: model
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Model'
+      summary: Sync model from DB
+      tags:
+      - Schema
+swagger: "2.0"
