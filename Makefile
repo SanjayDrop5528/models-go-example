@@ -3,7 +3,7 @@
 # Dynamic Model & Schema Migration Engine Example Application
 # ==============================================================================
 
-.PHONY: help run run-server run-memory run-memory-server run-postgres run-postgres-server run-mysql run-mysql-server run-mongodb run-mongodb-server test build clean swagger deps
+.PHONY: help run run-all run-server run-memory run-memory-server run-postgres run-postgres-server run-mysql run-mysql-server run-mongodb run-mongodb-server test build clean swagger deps
 
 # Default target
 .DEFAULT_GOAL := help
@@ -22,6 +22,8 @@ deps: ## Download and tidy Go dependencies
 	go mod tidy
 
 run: run-memory ## Default run target: runs the in-memory adapter example
+
+run-all: run-memory run-postgres run-mysql run-mongodb ## Run all adapter examples sequentially for testing
 
 run-server: ## Run the main Fiber API server with Swagger UI (port 8080)
 	@echo "$(BLUE)Starting Dynamic Model Engine Server...$(RESET)"
