@@ -3,7 +3,7 @@
 # Dynamic Model & Schema Migration Engine Example Application
 # ==============================================================================
 
-.PHONY: help run run-all run-server run-memory run-memory-server run-postgres run-postgres-server run-mysql run-mysql-server run-mongodb run-mongodb-server test build clean swagger deps
+.PHONY: help run run-all run-all-server run-server run-memory run-memory-server run-postgres run-postgres-server run-mysql run-mysql-server run-mongodb run-mongodb-server test build clean swagger deps
 
 # Default target
 .DEFAULT_GOAL := help
@@ -15,7 +15,7 @@ RESET := \033[0m
 
 help: ## Show help instructions for all Makefile targets
 	@echo "$(BLUE)Available Makefile Targets:$(RESET)"
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(GREEN)%-22s$(RESET) %s\n", $$1, $$2}'
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(GREEN)%-24s$(RESET) %s\n", $$1, $$2}'
 
 deps: ## Download and tidy Go dependencies
 	@echo "$(BLUE)Tidying dependencies...$(RESET)"
@@ -24,6 +24,8 @@ deps: ## Download and tidy Go dependencies
 run: run-memory ## Default run target: runs the in-memory adapter example
 
 run-all: run-memory run-postgres run-mysql run-mongodb ## Run all adapter examples sequentially for testing
+
+run-all-server: run-memory-server run-postgres-server run-mysql-server run-mongodb-server ## Run all adapter examples with Swagger UI server mode enabled
 
 run-server: ## Run the main Fiber API server with Swagger UI (port 8080)
 	@echo "$(BLUE)Starting Dynamic Model Engine Server...$(RESET)"

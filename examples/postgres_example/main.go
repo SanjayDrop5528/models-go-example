@@ -5,9 +5,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/SanjayDrop5528/models-go-postgres"
-	"github.com/SanjayDrop5528/models-go-engine/project"
 	"os"
+
+	"github.com/SanjayDrop5528/models-go-engine/project"
+	postgres "github.com/SanjayDrop5528/models-go-postgres"
 )
 
 func main() {
@@ -24,7 +25,7 @@ func RunPostgresExample() {
 	// 1. Initialize PostgreSQL Adapter and Engine directly (zero config needed)
 	dsn := os.Getenv("POSTGRES_DSN")
 	if dsn == "" {
-		dsn = "postgres://postgres:postgrespassword@localhost:5432/interview_ai?sslmode=disable"
+		dsn = "postgres://postgres:postgrespassword@localhost:5432/meet_kriyatec_spark?sslmode=disable"
 	}
 	pgAdapter := postgres.NewPostgresAdapter(dsn)
 	engine := project.New(pgAdapter)
