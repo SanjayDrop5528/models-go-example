@@ -538,6 +538,30 @@ func handleMySQLAPI(w http.ResponseWriter, r *http.Request, engine *project.Engi
 		}
 
 		if len(parts) == 2 {
+			subPath := parts[1]
+			if (subPath == "filter" || subPath == "query") && r.Method == http.MethodPost {
+				var req query.PaginationRequest
+				if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+					httpError(w, http.StatusBadRequest, err)
+					return
+				}
+				q := query.ParsePaginationRequest(req)
+				results, total, err := engine.Find(ctx, modelID, q)
+				if err != nil {
+					httpError(w, http.StatusInternalServerError, err)
+					return
+				}
+				_ = json.NewEncoder(w).Encode(map[string]any{
+					"response": results,
+					"pagination": []map[string]any{
+						{
+							"totalDocs": total,
+						},
+					},
+				})
+				return
+			}
+
 			id := parts[1]
 			if r.Method == http.MethodGet {
 				item, err := engine.FindOne(ctx, modelID, id)
@@ -1522,6 +1546,97 @@ func getMySQLOpenAPISpec() string {
           }
         },
         "responses": { "201": { "description": "Created" } }
+      }
+    },
+    "/api/data/{model}/filter": {
+      "post": {
+        "summary": "Query dynamic records with structured filter pipeline (AG-Grid compatible)",
+        "description": "Filter, sort, and paginate dynamic records using JSON criteria supporting operators: EQUALS, NOTEQUAL, CONTAINS, NOTCONTAINS, STARTSWITH, ENDSWITH, LESSTHAN, GREATERTHAN, LESSTHANOREQUAL, GREATERTHANOREQUAL, INRANGE, IN_BETWEEN, BLANK, NOTBLANK, IN, NOTIN.",
+        "tags": ["Data CRUD"],
+        "parameters": [
+          {
+            "name": "model",
+            "in": "path",
+            "required": true,
+            "description": "Target entity table or model ID",
+            "schema": {
+              "type": "string"
+            },
+            "examples": {
+              "employee": {
+                "value": "employee",
+                "summary": "Employees model"
+              },
+              "organization": {
+                "value": "organization",
+                "summary": "Organizations model"
+              },
+              "department": {
+                "value": "department",
+                "summary": "Departments model"
+              }
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "start": 0,
+                "end": 20,
+                "filter": [
+                  {
+                    "clause": "AND",
+                    "conditions": [
+                      {
+                        "column": "status",
+                        "operator": "EQUALS",
+                        "value": "active"
+                      },
+                      {
+                        "column": "salary",
+                        "operator": "GREATERTHAN",
+                        "value": 50000
+                      }
+                    ]
+                  }
+                ],
+                "sort": [
+                  {
+                    "colId": "created_at",
+                    "sort": "desc"
+                  }
+                ],
+                "includeTotal": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Filtered results with totalDocs count",
+            "content": {
+              "application/json": {
+                "example": {
+                  "response": [
+                    {
+                      "id": "550e8400-e29b-41d4-a716-446655440001",
+                      "first_name": "Sanjay",
+                      "status": "active",
+                      "salary": 95000
+                    }
+                  ],
+                  "pagination": [
+                    {
+                      "totalDocs": 1
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/data/{model}/{id}": {

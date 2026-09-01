@@ -113,6 +113,49 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/data/{model}/filter": {
+            "post": {
+                "description": "Filter and query records via structured JSON payload (compatible with AG-Grid and PaginationRequest filter criteria)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Data"
+                ],
+                "summary": "Post Filter Query",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Model Name or ID",
+                        "name": "model",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Pagination and Filter Payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/api/data/{model}/{id}": {
             "get": {
                 "description": "Find an individual record by its primary key identifier",

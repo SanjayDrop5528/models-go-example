@@ -97,6 +97,8 @@ func (r *Router) Register(app fiber.Router) {
 	// 2. Dynamic Data CRUD routes
 	data := apiGroup.Group("/data")
 	data.Post("/:model", r.createRecord)
+	data.Post("/:model/filter", r.filterRecords)
+	data.Post("/:model/query", r.filterRecords)
 	data.Get("/:model", r.findRecords)
 	data.Get("/:model/:id", r.findRecordByID)
 	data.Put("/:model/:id", r.updateRecord)
@@ -516,6 +518,44 @@ func (r *Router) findRecords(c *fiber.Ctx) error {
 		"total":  total,
 		"limit":  q.Pagination.Limit,
 		"offset": q.Pagination.Offset,
+	})
+}
+
+// filterRecords godoc
+// @Summary      Post Filter Query
+// @Description  Filter and query records via structured JSON payload (compatible with AG-Grid and PaginationRequest filter criteria)
+// @Tags         Data
+// @Accept       json
+// @Produce      json
+// @Param        model  path      string                  true  "Model Name or ID"
+// @Param        body   body      query.PaginationRequest true  "Pagination and Filter Payload"
+// @Success      200    {object}  map[string]any
+// @Router       /api/data/{model}/filter [post]
+func (r *Router) filterRecords(c *fiber.Ctx) error {
+	modelID := c.Params("model")
+	m, err := r.modelService.GetActive(c.Context(), modelID)
+	if err != nil {
+		return fiber.NewError(fiber.StatusNotFound, fmt.Sprintf("Model '%s' is not active or does not exist: %v", modelID, err))
+	}
+
+	var req query.PaginationRequest
+	if err := c.BodyParser(&req); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid JSON filter request: "+err.Error())
+	}
+
+	q := query.ParsePaginationRequest(req)
+	records, total, err := r.crudEngine.Find(c.Context(), m, q)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(fiber.Map{
+		"response": records,
+		"pagination": []fiber.Map{
+			{
+				"totalDocs": total,
+			},
+		},
 	})
 }
 
