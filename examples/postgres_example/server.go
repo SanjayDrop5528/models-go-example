@@ -6,6 +6,10 @@ import (
 	"fmt"
 	"log"
 	"github.com/SanjayDrop5528/models-go-engine/adapter"
+	"github.com/SanjayDrop5528/models-go-engine/dataset/domain"
+	datasetrepo "github.com/SanjayDrop5528/models-go-engine/dataset/repository"
+	datasetres "github.com/SanjayDrop5528/models-go-engine/dataset/resolver"
+	datasetsvc "github.com/SanjayDrop5528/models-go-engine/dataset/service"
 	"github.com/SanjayDrop5528/models-go-engine/diff"
 	"github.com/SanjayDrop5528/models-go-engine/model"
 	"github.com/SanjayDrop5528/models-go-engine/plan"
@@ -15,6 +19,11 @@ import (
 	"github.com/SanjayDrop5528/models-go-engine/validation"
 	"net/http"
 	"strings"
+)
+
+var (
+	globalDataSetRepo       = datasetrepo.NewDataSetRepository()
+	globalFunctionRegistry = datasetres.NewFunctionRegistry()
 )
 
 // StartSwaggerServer starts an HTTP REST API server with interactive Swagger UI.
@@ -62,6 +71,88 @@ func handlePostgresAPI(w http.ResponseWriter, r *http.Request, engine *project.E
 	w.Header().Set("Content-Type", "application/json")
 	ctx := r.Context()
 	path := strings.TrimPrefix(r.URL.Path, "/api/")
+
+	modelResolver := datasetres.NewModelResolver(nil)
+	dataSetService := datasetsvc.NewDataSetService(globalDataSetRepo, modelResolver, modelResolver, globalFunctionRegistry, engine.GetAdapter())
+
+	// Dataset Endpoints
+	if strings.HasPrefix(path, "datasets") {
+		subPath := strings.TrimPrefix(path, "datasets")
+		subPath = strings.TrimPrefix(subPath, "/")
+
+		if subPath == "preview" && r.Method == http.MethodPost {
+			var ds domain.DataSet
+			if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
+				httpError(w, http.StatusBadRequest, err)
+				return
+			}
+			res, err := dataSetService.Preview(ctx, &ds)
+			if err != nil {
+				httpError(w, http.StatusBadRequest, err)
+				return
+			}
+			_ = json.NewEncoder(w).Encode(res)
+			return
+		}
+
+		if subPath == "" {
+			if r.Method == http.MethodPost {
+				var ds domain.DataSet
+				if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
+					httpError(w, http.StatusBadRequest, err)
+					return
+				}
+				saved, err := dataSetService.Save(ctx, &ds)
+				if err != nil {
+					httpError(w, http.StatusBadRequest, err)
+					return
+				}
+				w.WriteHeader(http.StatusCreated)
+				_ = json.NewEncoder(w).Encode(saved)
+				return
+			}
+			if r.Method == http.MethodGet {
+				status := r.URL.Query().Get("status")
+				list, err := globalDataSetRepo.List(ctx, status)
+				if err != nil {
+					httpError(w, http.StatusInternalServerError, err)
+					return
+				}
+				_ = json.NewEncoder(w).Encode(list)
+				return
+			}
+		}
+
+		parts := strings.Split(subPath, "/")
+		if len(parts) == 2 && parts[1] == "execute" && r.Method == http.MethodPost {
+			refName := parts[0]
+			var reqBody struct {
+				FilterParams map[string]any `json:"filterParams"`
+			}
+			_ = json.NewDecoder(r.Body).Decode(&reqBody)
+			rows, err := dataSetService.Execute(ctx, refName, reqBody.FilterParams)
+			if err != nil {
+				httpError(w, http.StatusBadRequest, err)
+				return
+			}
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"response": rows,
+				"count":    len(rows),
+			})
+			return
+		}
+
+		if len(parts) == 1 && parts[0] != "" && r.Method == http.MethodGet {
+			refName := parts[0]
+			ds, err := globalDataSetRepo.FindByReferenceName(ctx, refName)
+			if err != nil {
+				httpError(w, http.StatusNotFound, err)
+				return
+			}
+			_ = json.NewEncoder(w).Encode(ds)
+			return
+		}
+	}
 
 	// Seed endpoints
 	if path == "seed" && r.Method == http.MethodPost {
@@ -689,10 +780,167 @@ func getPostgresOpenAPISpec() string {
     { "name": "DataModel (Fields)", "description": "Field definitions, logical data types, and constraints" },
     { "name": "Schema Migration", "description": "Preview and apply schema migrations" },
     { "name": "Data CRUD", "description": "Dynamic record insertion, querying, and updating" },
+    { "name": "DataSets", "description": "Dynamic virtual datasets, calculations, multi-table joins, and parameter binding" },
     { "name": "Operations", "description": "PostgreSQL stored functions and procedures" },
     { "name": "Transactions", "description": "ACID atomic database transactions" }
   ],
   "paths": {
+    "/api/datasets/preview": {
+      "post": {
+        "summary": "Preview DataSet (No Persistence)",
+        "description": "Validates dataset definition, builds Query AST, compiles executable & reference SQL pipelines, and returns column metadata and sample rows without saving.",
+        "tags": ["DataSets"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "name": "Employee Department Payroll",
+                "reference_name": "emp_dept_payroll",
+                "driver": "postgres",
+                "save_mode": "PROCEDURE",
+                "base_collection": {
+                  "collection": "employees",
+                  "filter": { "is_active": true }
+                },
+                "join_collections": [
+                  {
+                    "fromCollection": "employees",
+                    "fromCollectionField": "department_id",
+                    "toCollection": "departments",
+                    "toCollectionField": "id",
+                    "namedAs": "d",
+                    "joinType": "LEFT",
+                    "filter": { "is_active": true }
+                  }
+                ],
+                "group_by_fields": [
+                  { "tableName": "d", "fieldName": "name" }
+                ],
+                "selected_list": [
+                  { "field": "d.name", "headerName": "department_name" }
+                ],
+                "custom_columns": [
+                  {
+                    "customColumnName": "total_salary",
+                    "customLabelName": "Total Salary",
+                    "customAggregateFnName": "SUM",
+                    "fields": [
+                      { "tableName": "employees", "fieldName": "salary" }
+                    ]
+                  },
+                  {
+                    "customColumnName": "avg_salary",
+                    "customLabelName": "Average Salary",
+                    "customAggregateFnName": "AVG",
+                    "fields": [
+                      { "tableName": "employees", "fieldName": "salary" }
+                    ]
+                  }
+                ],
+                "filter_params": [
+                  { "paramName": "dept_id", "paramDataType": "string", "required": false }
+                ],
+                "filter": {
+                  "employees.department_id": { "ParamsName": "dept_id", "parmsDataType": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Preview results with column metadata and compiled SQL" }
+        }
+      }
+    },
+    "/api/datasets": {
+      "post": {
+        "summary": "Save DataSet Definition & Create DB Stored Procedure/Function",
+        "description": "Validates, compiles pipelines, executes DDL to create database procedure/function, and persists DataSet metadata atomically.",
+        "tags": ["DataSets"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "name": "Employee Department Payroll",
+                "reference_name": "emp_dept_payroll",
+                "driver": "postgres",
+                "save_mode": "PROCEDURE",
+                "base_collection": { "collection": "employees" },
+                "join_collections": [
+                  {
+                    "fromCollection": "employees",
+                    "fromCollectionField": "department_id",
+                    "toCollection": "departments",
+                    "toCollectionField": "id",
+                    "namedAs": "d"
+                  }
+                ],
+                "group_by_fields": [
+                  { "tableName": "d", "fieldName": "name" }
+                ],
+                "selected_list": [
+                  { "field": "d.name", "headerName": "department_name" }
+                ],
+                "custom_columns": [
+                  {
+                    "customColumnName": "total_salary",
+                    "customLabelName": "Total Salary",
+                    "customAggregateFnName": "SUM",
+                    "fields": [{ "tableName": "employees", "fieldName": "salary" }]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "DataSet saved and DB procedure created" }
+        }
+      },
+      "get": {
+        "summary": "List Saved DataSets",
+        "tags": ["DataSets"],
+        "responses": {
+          "200": { "description": "List of saved datasets" }
+        }
+      }
+    },
+    "/api/datasets/{referenceName}/execute": {
+      "post": {
+        "summary": "Execute DataSet at Runtime with FilterParams",
+        "description": "Binds runtime filter parameters into the reference pipeline or executes the default pipeline.",
+        "tags": ["DataSets"],
+        "parameters": [
+          {
+            "name": "referenceName",
+            "in": "path",
+            "required": true,
+            "description": "DataSet Reference Name",
+            "schema": { "type": "string" },
+            "examples": {
+              "payroll": { "value": "emp_dept_payroll", "summary": "Department Payroll Dataset" }
+            }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "example": {
+                "filterParams": {
+                  "dept_id": "dept_101"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Query execution results" }
+        }
+      }
+    },
     "/api/schema/import": {
       "post": {
         "summary": "Import Live Database Tables to ModelConfig & DataModel Registries",
