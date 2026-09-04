@@ -4,10 +4,14 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
+	"strings"
 	"github.com/SanjayDrop5528/models-go-engine/model"
 	"github.com/SanjayDrop5528/models-go-engine/project"
 	"github.com/SanjayDrop5528/models-go-engine/service"
+	mysql "github.com/SanjayDrop5528/models-go-mysql"
 )
+
 
 // SeedMySQLModelConfigs seeds only the ModelConfig definitions (address, organization, department, employee, project_assignment).
 // It checks if each model_config exists: if not, it creates it; if already existing, it updates and maps it gracefully.
@@ -321,3 +325,167 @@ func SeedEnterpriseMySQLSchema(ctx context.Context, engine *project.Engine) (map
 		"seeded_records": sampleRecords,
 	}, nil
 }
+
+// DiscoverMySQLTables queries information_schema to discover all live user tables in the specified MySQL database/schema.
+func DiscoverMySQLTables(ctx context.Context, engine *project.Engine, dbName, schemaName, customDSN string) (map[string]any, error) {
+	targetDSN := customDSN
+	if targetDSN == "" {
+		baseDSN := "root:mysqlpassword@tcp(localhost:3306)/enterprise_db"
+		if envDSN := os.Getenv("MYSQL_DSN"); envDSN != "" {
+			baseDSN = envDSN
+		}
+		if dbName != "" {
+			targetDSN = replaceMySQLDatabaseInDSN(baseDSN, dbName)
+		} else {
+			targetDSN = baseDSN
+		}
+	}
+
+	adapter := mysql.NewMySQLAdapter(targetDSN)
+	if schemaName != "" && !strings.EqualFold(schemaName, "ALL") && schemaName != "*" {
+		adapter.WithSchemas(schemaName)
+	}
+
+	if err := adapter.Connect(ctx); err != nil {
+		return nil, fmt.Errorf("failed connecting to MySQL database '%s': %w", dbName, err)
+	}
+	defer adapter.Close(ctx)
+
+	allSchemas, _ := adapter.ListSchemas(ctx)
+
+	var schemas []string
+	if schemaName != "" && !strings.EqualFold(schemaName, "ALL") && schemaName != "*" {
+		schemas = []string{schemaName}
+	}
+	tables, err := adapter.ListTables(ctx, schemas...)
+	if err != nil {
+		return nil, fmt.Errorf("failed listing tables from MySQL: %w", err)
+	}
+
+	var results []map[string]any
+	for _, t := range tables {
+		if t.Name == "model_configs" || t.Name == "data_models" || t.Name == "schema_migrations" || t.Name == "alembic_version" || t.Name == "flyway_schema_history" {
+			continue
+		}
+
+		results = append(results, map[string]any{
+			"table":        t.Name,
+			"schema":       t.Schema,
+			"column_count": 0,
+			"primary_key":  "id",
+			"database":     adapter.GetDatabaseName(),
+		})
+	}
+
+	return map[string]any{
+		"status":        "SUCCESS",
+		"database":      adapter.GetDatabaseName(),
+		"schema":        schemaName,
+		"schemas":       allSchemas,
+		"tables":        results,
+		"total_tables":  len(results),
+		"total_schemas": len(allSchemas),
+	}, nil
+}
+
+// ImportMySQLCustomDatabase introspects live MySQL tables and populates ModelConfig and DataModel registries.
+func ImportMySQLCustomDatabase(ctx context.Context, engine *project.Engine, dbName, schemaName, customDSN string, selectedTables []string) (map[string]any, error) {
+	if dbName == "" {
+		dbName = "enterprise_db"
+	}
+
+	targetDSN := customDSN
+	if targetDSN == "" {
+		baseDSN := "root:mysqlpassword@tcp(localhost:3306)/enterprise_db"
+		if envDSN := os.Getenv("MYSQL_DSN"); envDSN != "" {
+			baseDSN = envDSN
+		}
+		targetDSN = replaceMySQLDatabaseInDSN(baseDSN, dbName)
+	}
+
+	log.Printf("[MySQL IMPORT] Connecting to database '%s' at: %s", dbName, targetDSN)
+	adapter := mysql.NewMySQLAdapter(targetDSN)
+	if schemaName != "" && !strings.EqualFold(schemaName, "ALL") && schemaName != "*" {
+		adapter.WithSchemas(schemaName)
+	}
+
+	configs, fields, err := adapter.ImportLiveMetadata(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed introspecting MySQL database '%s': %w", dbName, err)
+	}
+
+	selectedMap := make(map[string]bool)
+	for _, t := range selectedTables {
+		selectedMap[strings.ToLower(strings.TrimSpace(t))] = true
+	}
+
+	var importedConfigs []*model.ModelConfig
+	var importedFields []*model.DataModel
+	importedTableNames := make([]string, 0)
+
+	for _, cfg := range configs {
+		if len(selectedMap) > 0 && !selectedMap[strings.ToLower(cfg.Table)] && !selectedMap[strings.ToLower(cfg.ID)] {
+			continue
+		}
+
+		saved, err := engine.CreateModelConfig(ctx, cfg)
+		if err != nil {
+			saved, err = engine.UpdateModelConfig(ctx, cfg.ID, cfg)
+		}
+		if err == nil && saved != nil {
+			importedConfigs = append(importedConfigs, saved)
+			importedTableNames = append(importedTableNames, saved.Table)
+		}
+	}
+
+	for _, f := range fields {
+		if len(selectedMap) > 0 {
+			found := false
+			for _, ic := range importedConfigs {
+				if ic.ID == f.ModelID {
+					found = true
+					break
+				}
+			}
+			if !found {
+				continue
+			}
+		}
+
+		savedField, err := engine.AddDataModel(ctx, f)
+		if err != nil {
+			_, _ = engine.GetRegistry().SaveDataModel(f)
+			savedField = f
+		}
+		if savedField != nil {
+			importedFields = append(importedFields, savedField)
+		}
+	}
+
+	log.Printf("[MySQL IMPORT] ✔ Successfully imported %d ModelConfig(s) and %d DataModel field(s) from database '%s'!", len(importedConfigs), len(importedFields), dbName)
+
+	return map[string]any{
+		"status":          "SUCCESS",
+		"message":         fmt.Sprintf("Successfully imported %d model(s) and %d field(s) from MySQL database '%s'!", len(importedConfigs), len(importedFields), dbName),
+		"database":        dbName,
+		"schema":          schemaName,
+		"imported_tables": importedTableNames,
+		"imported_models": importedConfigs,
+		"total_models":    len(importedConfigs),
+		"total_fields":    len(importedFields),
+	}, nil
+}
+
+func replaceMySQLDatabaseInDSN(dsn, newDB string) string {
+	if strings.Contains(dsn, "/") {
+		lastSlash := strings.LastIndex(dsn, "/")
+		questionMark := strings.Index(dsn[lastSlash:], "?")
+		if questionMark != -1 {
+			queryPart := dsn[lastSlash+questionMark:]
+			return dsn[:lastSlash+1] + newDB + queryPart
+		}
+		return dsn[:lastSlash+1] + newDB
+	}
+	return dsn
+}
+

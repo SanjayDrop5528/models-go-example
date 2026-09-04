@@ -69,6 +69,13 @@ func StartSwaggerServer(port string, engine *project.Engine) *http.Server {
 
 func handlePostgresAPI(w http.ResponseWriter, r *http.Request, engine *project.Engine) {
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept, X-Requested-With")
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
 	ctx := r.Context()
 	path := strings.TrimPrefix(r.URL.Path, "/api/")
 
@@ -165,8 +172,56 @@ func handlePostgresAPI(w http.ResponseWriter, r *http.Request, engine *project.E
 		_ = json.NewEncoder(w).Encode(result)
 		return
 	}
+	if (path == "schema/discover-tables" || path == "models/discover-tables") && (r.Method == http.MethodPost || r.Method == http.MethodGet) {
+		var req struct {
+			Database         string `json:"database"`
+			Schema           string `json:"schema"`
+			ConnectionString string `json:"connection_string"`
+		}
+		if r.Method == http.MethodPost && r.Body != nil {
+			_ = json.NewDecoder(r.Body).Decode(&req)
+		}
+		if req.Database == "" {
+			req.Database = r.URL.Query().Get("database")
+		}
+		if req.Schema == "" {
+			req.Schema = r.URL.Query().Get("schema")
+		}
+		if req.Database == "" {
+			req.Database = "uat_mineone"
+		}
+		result, err := DiscoverPostgresTables(ctx, engine, req.Database, req.Schema, req.ConnectionString)
+		if err != nil {
+			httpError(w, http.StatusBadRequest, err)
+			return
+		}
+		_ = json.NewEncoder(w).Encode(result)
+		return
+	}
+
+
 	if (path == "schema/import" || path == "seed/import" || path == "models/import-from-db") && r.Method == http.MethodPost {
-		result, err := ImportPostgresLiveSchema(ctx, engine)
+		var req struct {
+			Database         string   `json:"database"`
+			Schema           string   `json:"schema"`
+			ConnectionString string   `json:"connection_string"`
+			Tables           []string `json:"tables"`
+		}
+		if r.Body != nil {
+			_ = json.NewDecoder(r.Body).Decode(&req)
+		}
+
+		var result map[string]any
+		var err error
+		if req.Database != "" || req.ConnectionString != "" || req.Schema != "" || len(req.Tables) > 0 {
+			if req.Database == "" {
+				req.Database = "uat_mineone"
+			}
+			result, err = ImportPostgresCustomDatabase(ctx, engine, req.Database, req.Schema, req.ConnectionString, req.Tables)
+		} else {
+			result, err = ImportPostgresLiveSchema(ctx, engine)
+		}
+
 		if err != nil {
 			httpError(w, http.StatusInternalServerError, err)
 			return
@@ -175,6 +230,7 @@ func handlePostgresAPI(w http.ResponseWriter, r *http.Request, engine *project.E
 		_ = json.NewEncoder(w).Encode(result)
 		return
 	}
+
 	if (path == "seed/model-configs" || path == "seed/models") && r.Method == http.MethodPost {
 		configs, err := SeedPostgresModelConfigs(ctx, engine)
 		if err != nil {

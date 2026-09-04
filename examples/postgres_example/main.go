@@ -25,7 +25,7 @@ func RunPostgresExample() {
 	// 1. Initialize PostgreSQL Adapter and Engine directly (zero config needed)
 	dsn := os.Getenv("POSTGRES_DSN")
 	if dsn == "" {
-		dsn = "postgres://postgres:postgrespassword@localhost:5432/linkedin_bot?sslmode=disable"
+		dsn = "postgres://postgres:postgrespassword@localhost:5432/uat_mineone?sslmode=disable"
 	}
 	pgAdapter := postgres.NewPostgresAdapter(dsn)
 	engine := project.New(pgAdapter)

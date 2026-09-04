@@ -25,7 +25,21 @@ run: run-memory ## Default run target: runs the in-memory adapter example
 
 run-all: run-memory run-postgres run-mysql run-mongodb ## Run all adapter examples sequentially for testing
 
-run-all-server: run-memory-server run-postgres-server run-mysql-server run-mongodb-server ## Run all adapter examples with Swagger UI server mode enabled
+run-all-server: ## Run all adapter servers concurrently in the background with Swagger UI
+	@echo "$(BLUE)Starting all Adapter Servers simultaneously...$(RESET)"
+	@echo "$(GREEN)  1. Fiber Engine Server:    http://localhost:8080/swagger/$(RESET)"
+	@echo "$(GREEN)  2. PostgreSQL Server:      http://localhost:8081/swagger/$(RESET)"
+	@echo "$(GREEN)  3. MySQL Server:           http://localhost:8082/swagger/$(RESET)"
+	@echo "$(GREEN)  4. MongoDB Server:         http://localhost:8083/swagger/$(RESET)"
+	@echo "$(GREEN)  5. In-Memory Server:       http://localhost:8084/swagger/$(RESET)"
+	@trap 'kill 0' EXIT INT TERM; \
+	SERVER=true go run ./examples/memory_example & \
+	SERVER=true go run ./examples/postgres_example & \
+	SERVER=true go run ./examples/mysql_example & \
+	SERVER=true go run ./examples/mongodb_example & \
+	go run ./cmd/server & \
+	wait
+
 
 run-server: ## Run the main Fiber API server with Swagger UI (port 8080)
 	@echo "$(BLUE)Starting Dynamic Model Engine Server...$(RESET)"

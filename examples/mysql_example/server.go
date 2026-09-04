@@ -63,6 +63,65 @@ func handleMySQLAPI(w http.ResponseWriter, r *http.Request, engine *project.Engi
 	ctx := r.Context()
 	path := strings.TrimPrefix(r.URL.Path, "/api/")
 
+	// Schema discovery and import endpoints
+	if (path == "schema/discover-tables" || path == "models/discover-tables") && (r.Method == http.MethodPost || r.Method == http.MethodGet) {
+		var req struct {
+			Database         string `json:"database"`
+			Schema           string `json:"schema"`
+			ConnectionString string `json:"connection_string"`
+		}
+		if r.Method == http.MethodPost && r.Body != nil {
+			_ = json.NewDecoder(r.Body).Decode(&req)
+		}
+		if req.Database == "" {
+			req.Database = r.URL.Query().Get("database")
+		}
+		if req.Schema == "" {
+			req.Schema = r.URL.Query().Get("schema")
+		}
+		if req.Database == "" {
+			req.Database = "enterprise_db"
+		}
+		result, err := DiscoverMySQLTables(ctx, engine, req.Database, req.Schema, req.ConnectionString)
+		if err != nil {
+			httpError(w, http.StatusBadRequest, err)
+			return
+		}
+		_ = json.NewEncoder(w).Encode(result)
+		return
+	}
+
+	if (path == "schema/import" || path == "seed/import" || path == "models/import-from-db") && r.Method == http.MethodPost {
+		var req struct {
+			Database         string   `json:"database"`
+			Schema           string   `json:"schema"`
+			ConnectionString string   `json:"connection_string"`
+			Tables           []string `json:"tables"`
+		}
+		if r.Body != nil {
+			_ = json.NewDecoder(r.Body).Decode(&req)
+		}
+
+		var result map[string]any
+		var err error
+		if req.Database != "" || req.ConnectionString != "" || req.Schema != "" || len(req.Tables) > 0 {
+			if req.Database == "" {
+				req.Database = "enterprise_db"
+			}
+			result, err = ImportMySQLCustomDatabase(ctx, engine, req.Database, req.Schema, req.ConnectionString, req.Tables)
+		} else {
+			result, err = engine.ImportLiveMetadata(ctx)
+		}
+
+		if err != nil {
+			httpError(w, http.StatusInternalServerError, err)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(result)
+		return
+	}
+
 	// Seed endpoints
 	if path == "seed" && r.Method == http.MethodPost {
 		result, err := SeedEnterpriseMySQLSchema(ctx, engine)
@@ -75,6 +134,7 @@ func handleMySQLAPI(w http.ResponseWriter, r *http.Request, engine *project.Engi
 		return
 	}
 	if (path == "seed/model-configs" || path == "seed/models") && r.Method == http.MethodPost {
+
 		configs, err := SeedMySQLModelConfigs(ctx, engine)
 		if err != nil {
 			httpError(w, http.StatusInternalServerError, err)
