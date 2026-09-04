@@ -87,6 +87,17 @@ func handlePostgresAPI(w http.ResponseWriter, r *http.Request, engine *project.E
 		subPath := strings.TrimPrefix(path, "datasets")
 		subPath = strings.TrimPrefix(subPath, "/")
 
+		if (subPath == "functions" || subPath == "functions/") && r.Method == http.MethodGet {
+			category := r.URL.Query().Get("category")
+			functions, err := globalFunctionRegistry.ListFunctions(ctx, domain.FunctionCategory(category))
+			if err != nil {
+				httpError(w, http.StatusInternalServerError, err)
+				return
+			}
+			_ = json.NewEncoder(w).Encode(functions)
+			return
+		}
+
 		if subPath == "preview" && r.Method == http.MethodPost {
 			var ds domain.DataSet
 			if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
