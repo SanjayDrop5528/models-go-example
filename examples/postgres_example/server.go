@@ -597,7 +597,22 @@ func handlePostgresAPI(w http.ResponseWriter, r *http.Request, engine *project.E
 		}
 	}
 
-	// 2. Schema Migration: /api/models/:model/schema/apply & /preview
+	// 2. Schema Migration: /api/models/:model/schema/diff, /apply & /preview
+	if strings.HasPrefix(path, "models/") && strings.HasSuffix(path, "/schema/diff") && (r.Method == http.MethodGet || r.Method == http.MethodPost) {
+		modelID := strings.TrimSuffix(strings.TrimPrefix(path, "models/"), "/schema/diff")
+		var hints diff.DiffHints
+		if r.Body != nil {
+			_ = json.NewDecoder(r.Body).Decode(&hints)
+		}
+		diffRes, err := engine.GetDiff(ctx, modelID, hints)
+		if err != nil {
+			httpError(w, http.StatusBadRequest, err)
+			return
+		}
+		_ = json.NewEncoder(w).Encode(diffRes)
+		return
+	}
+
 	if strings.HasPrefix(path, "models/") && strings.HasSuffix(path, "/schema/apply") && r.Method == http.MethodPost {
 		modelID := strings.TrimSuffix(strings.TrimPrefix(path, "models/"), "/schema/apply")
 		var req service.ApplyRequest
@@ -614,7 +629,9 @@ func handlePostgresAPI(w http.ResponseWriter, r *http.Request, engine *project.E
 	if strings.HasPrefix(path, "models/") && strings.HasSuffix(path, "/schema/preview") && r.Method == http.MethodPost {
 		modelID := strings.TrimSuffix(strings.TrimPrefix(path, "models/"), "/schema/preview")
 		var hints diff.DiffHints
-		_ = json.NewDecoder(r.Body).Decode(&hints)
+		if r.Body != nil {
+			_ = json.NewDecoder(r.Body).Decode(&hints)
+		}
 		prev, err := engine.PreviewSchema(ctx, modelID, hints)
 		if err != nil {
 			httpError(w, http.StatusBadRequest, err)

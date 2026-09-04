@@ -458,8 +458,16 @@ func ImportPostgresCustomDatabase(ctx context.Context, engine *project.Engine, d
 		// Save into active engine registry and metadata store
 		saved, err := engine.CreateModelConfig(ctx, cfg)
 		if err != nil {
-			// If exists, update
+			// Try update if already exists
 			saved, err = engine.UpdateModelConfig(ctx, cfg.ID, cfg)
+		}
+		if err != nil {
+			// Last resort: push directly into registry so the model is queryable in-session
+			log.Printf("[IMPORT] ⚠ engine path failed for '%s' (%s): %v — saving directly to registry", cfg.ID, cfg.Name, err)
+			if rs, rerr := engine.GetRegistry().SaveModelConfig(cfg); rerr == nil {
+				saved = rs
+				err = nil
+			}
 		}
 		if err == nil && saved != nil {
 			importedConfigs = append(importedConfigs, saved)
