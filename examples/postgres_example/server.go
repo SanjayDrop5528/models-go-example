@@ -7,9 +7,6 @@ import (
 	"log"
 	"github.com/SanjayDrop5528/models-go-engine/adapter"
 	"github.com/SanjayDrop5528/models-go-engine/dataset/domain"
-	datasetrepo "github.com/SanjayDrop5528/models-go-engine/dataset/repository"
-	datasetres "github.com/SanjayDrop5528/models-go-engine/dataset/resolver"
-	datasetsvc "github.com/SanjayDrop5528/models-go-engine/dataset/service"
 	"github.com/SanjayDrop5528/models-go-engine/diff"
 	"github.com/SanjayDrop5528/models-go-engine/model"
 	"github.com/SanjayDrop5528/models-go-engine/plan"
@@ -21,14 +18,12 @@ import (
 	"strings"
 )
 
-var (
-	globalDataSetRepo       = datasetrepo.NewDataSetRepository()
-	globalFunctionRegistry = datasetres.NewFunctionRegistry()
-)
-
 // StartSwaggerServer starts an HTTP REST API server with interactive Swagger UI.
 func StartSwaggerServer(port string, engine *project.Engine) *http.Server {
 	ctx := context.Background()
+	if engine != nil {
+		_ = engine.EnsureMetadataTables(ctx)
+	}
 	log.Println("[Server Startup] Restoring metadata definitions from database...")
 	if err := engine.RestoreFromDB(ctx); err != nil {
 		log.Printf("[Server Startup] ⚠ Metadata restore warning: %v", err)
@@ -79,8 +74,9 @@ func handlePostgresAPI(w http.ResponseWriter, r *http.Request, engine *project.E
 	ctx := r.Context()
 	path := strings.TrimPrefix(r.URL.Path, "/api/")
 
-	modelResolver := datasetres.NewModelResolver(nil)
-	dataSetService := datasetsvc.NewDataSetService(globalDataSetRepo, modelResolver, modelResolver, globalFunctionRegistry, engine.GetAdapter())
+	dataSetService := engine.GetDataSetService()
+	dataSetRepo := engine.GetDataSetRepository()
+	functionRegistry := engine.GetFunctionRegistry()
 
 	// Dataset Endpoints
 	if strings.HasPrefix(path, "datasets") {
@@ -89,7 +85,7 @@ func handlePostgresAPI(w http.ResponseWriter, r *http.Request, engine *project.E
 
 		if (subPath == "functions" || subPath == "functions/") && r.Method == http.MethodGet {
 			category := r.URL.Query().Get("category")
-			functions, err := globalFunctionRegistry.ListFunctions(ctx, domain.FunctionCategory(category))
+			functions, err := functionRegistry.ListFunctions(ctx, domain.FunctionCategory(category))
 			if err != nil {
 				httpError(w, http.StatusInternalServerError, err)
 				return
@@ -131,7 +127,7 @@ func handlePostgresAPI(w http.ResponseWriter, r *http.Request, engine *project.E
 			}
 			if r.Method == http.MethodGet {
 				status := r.URL.Query().Get("status")
-				list, err := globalDataSetRepo.List(ctx, status)
+				list, err := dataSetRepo.List(ctx, status)
 				if err != nil {
 					httpError(w, http.StatusInternalServerError, err)
 					return
@@ -162,7 +158,7 @@ func handlePostgresAPI(w http.ResponseWriter, r *http.Request, engine *project.E
 
 		if len(parts) == 1 && parts[0] != "" && r.Method == http.MethodGet {
 			refName := parts[0]
-			ds, err := globalDataSetRepo.FindByReferenceName(ctx, refName)
+			ds, err := dataSetRepo.FindByReferenceName(ctx, refName)
 			if err != nil {
 				httpError(w, http.StatusNotFound, err)
 				return
