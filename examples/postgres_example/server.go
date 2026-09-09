@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"github.com/SanjayDrop5528/models-go-engine/adapter"
+	"github.com/SanjayDrop5528/models-go-engine/ai"
 	"github.com/SanjayDrop5528/models-go-engine/dataset/domain"
 	"github.com/SanjayDrop5528/models-go-engine/diff"
 	"github.com/SanjayDrop5528/models-go-engine/model"
@@ -106,6 +107,30 @@ func handlePostgresAPI(w http.ResponseWriter, r *http.Request, engine *project.E
 				return
 			}
 			_ = json.NewEncoder(w).Encode(res)
+			return
+		}
+
+		if (subPath == "ai-generate" || subPath == "ai/chat") && r.Method == http.MethodPost {
+			var req ai.GenerateRequest
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				httpError(w, http.StatusBadRequest, err)
+				return
+			}
+			res, err := engine.GenerateDataSetFromPrompt(ctx, &req)
+			if err != nil {
+				httpError(w, http.StatusBadRequest, err)
+				return
+			}
+			_ = json.NewEncoder(w).Encode(res)
+			return
+		}
+
+		if subPath == "ai/reset" && r.Method == http.MethodPost {
+			engine.ResetAIConversation()
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"status":  "ok",
+				"message": "AI conversation memory reset",
+			})
 			return
 		}
 
