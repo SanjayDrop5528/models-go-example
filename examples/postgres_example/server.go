@@ -190,15 +190,25 @@ func handlePostgresAPI(w http.ResponseWriter, r *http.Request, engine *project.E
 			return
 		}
 
-		if len(parts) == 1 && parts[0] != "" && r.Method == http.MethodGet {
+		if len(parts) == 1 && parts[0] != "" {
 			refName := parts[0]
-			ds, err := dataSetRepo.FindByReferenceName(ctx, refName)
-			if err != nil {
-				httpError(w, http.StatusNotFound, err)
+			if r.Method == http.MethodGet {
+				ds, err := dataSetRepo.FindByReferenceName(ctx, refName)
+				if err != nil {
+					httpError(w, http.StatusNotFound, err)
+					return
+				}
+				_ = json.NewEncoder(w).Encode(ds)
 				return
 			}
-			_ = json.NewEncoder(w).Encode(ds)
-			return
+			if r.Method == http.MethodDelete {
+				if err := dataSetRepo.Delete(ctx, refName); err != nil {
+					httpError(w, http.StatusInternalServerError, err)
+					return
+				}
+				_ = json.NewEncoder(w).Encode(map[string]any{"message": "Dataset deleted successfully"})
+				return
+			}
 		}
 	}
 
@@ -467,7 +477,7 @@ func handlePostgresAPI(w http.ResponseWriter, r *http.Request, engine *project.E
 		}
 
 		// 5. Validation - Schema Safety
-		if valPath == "plan" && r.Method == http.MethodPost {
+		if (valPath == "plan" || valPath == "schema-plan-safety") && r.Method == http.MethodPost {
 			var req struct {
 				Plan             plan.SchemaPlan `json:"plan"`
 				AllowDestructive bool            `json:"allow_destructive"`
