@@ -79,6 +79,15 @@ func handlePostgresAPI(w http.ResponseWriter, r *http.Request, engine *project.E
 	dataSetRepo := engine.GetDataSetRepository()
 	functionRegistry := engine.GetFunctionRegistry()
 
+	// Capabilities Endpoint
+	if path == "capabilities" || path == "adapter/capabilities" {
+		if r.Method == http.MethodGet {
+			caps := adapter.GetCapabilities(engine.GetAdapter())
+			_ = json.NewEncoder(w).Encode(caps)
+			return
+		}
+	}
+
 	// Dataset Endpoints
 	if strings.HasPrefix(path, "datasets") {
 		subPath := strings.TrimPrefix(path, "datasets")

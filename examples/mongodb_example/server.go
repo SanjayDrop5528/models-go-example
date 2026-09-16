@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"github.com/SanjayDrop5528/models-go-engine/adapter"
+	"github.com/SanjayDrop5528/models-go-engine/ai"
+	"github.com/SanjayDrop5528/models-go-engine/dataset/domain"
 	"github.com/SanjayDrop5528/models-go-engine/diff"
 	"github.com/SanjayDrop5528/models-go-engine/model"
 	"github.com/SanjayDrop5528/models-go-engine/plan"
@@ -60,8 +62,142 @@ func StartSwaggerServer(port string, engine *project.Engine) *http.Server {
 
 func handleMongoAPI(w http.ResponseWriter, r *http.Request, engine *project.Engine) {
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept, X-Requested-With")
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
 	ctx := r.Context()
 	path := strings.TrimPrefix(r.URL.Path, "/api/")
+
+	// Capabilities Endpoint
+	if path == "capabilities" || path == "adapter/capabilities" {
+		if r.Method == http.MethodGet {
+			caps := adapter.GetCapabilities(engine.GetAdapter())
+			_ = json.NewEncoder(w).Encode(caps)
+			return
+		}
+	}
+
+	dataSetService := engine.GetDataSetService()
+	dataSetRepo := engine.GetDataSetRepository()
+	functionRegistry := engine.GetFunctionRegistry()
+
+	// Dataset Endpoints
+	if strings.HasPrefix(path, "datasets") {
+		subPath := strings.TrimPrefix(path, "datasets")
+		subPath = strings.TrimPrefix(subPath, "/")
+
+		if (subPath == "functions" || subPath == "functions/") && r.Method == http.MethodGet {
+			category := r.URL.Query().Get("category")
+			functions, err := functionRegistry.ListFunctions(ctx, domain.FunctionCategory(category))
+			if err != nil {
+				httpError(w, http.StatusInternalServerError, err)
+				return
+			}
+			_ = json.NewEncoder(w).Encode(functions)
+			return
+		}
+
+		if subPath == "preview" && r.Method == http.MethodPost {
+			var ds domain.DataSet
+			if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
+				httpError(w, http.StatusBadRequest, err)
+				return
+			}
+			res, err := dataSetService.Preview(ctx, &ds)
+			if err != nil {
+				httpError(w, http.StatusBadRequest, err)
+				return
+			}
+			_ = json.NewEncoder(w).Encode(res)
+			return
+		}
+
+		if (subPath == "ai-generate" || subPath == "ai/chat") && r.Method == http.MethodPost {
+			var req ai.GenerateRequest
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				httpError(w, http.StatusBadRequest, err)
+				return
+			}
+			res, err := engine.GenerateDataSetFromPrompt(ctx, &req)
+			if err != nil {
+				httpError(w, http.StatusBadRequest, err)
+				return
+			}
+			_ = json.NewEncoder(w).Encode(res)
+			return
+		}
+
+		if subPath == "ai/reset" && r.Method == http.MethodPost {
+			engine.ResetAIConversation()
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"status":  "ok",
+				"message": "AI conversation memory reset",
+			})
+			return
+		}
+
+		if subPath == "" {
+			if r.Method == http.MethodPost {
+				var ds domain.DataSet
+				if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
+					httpError(w, http.StatusBadRequest, err)
+					return
+				}
+				saved, err := dataSetService.Save(ctx, &ds)
+				if err != nil {
+					httpError(w, http.StatusBadRequest, err)
+					return
+				}
+				w.WriteHeader(http.StatusCreated)
+				_ = json.NewEncoder(w).Encode(saved)
+				return
+			}
+			if r.Method == http.MethodGet {
+				status := r.URL.Query().Get("status")
+				list, err := dataSetRepo.List(ctx, status)
+				if err != nil {
+					httpError(w, http.StatusInternalServerError, err)
+					return
+				}
+				_ = json.NewEncoder(w).Encode(list)
+				return
+			}
+		}
+
+		parts := strings.Split(subPath, "/")
+		if len(parts) == 2 && parts[1] == "execute" && r.Method == http.MethodPost {
+			refName := parts[0]
+			var reqBody struct {
+				FilterParams map[string]any `json:"filterParams"`
+			}
+			_ = json.NewDecoder(r.Body).Decode(&reqBody)
+			rows, err := dataSetService.Execute(ctx, refName, reqBody.FilterParams)
+			if err != nil {
+				httpError(w, http.StatusBadRequest, err)
+				return
+			}
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"response": rows,
+				"count":    len(rows),
+			})
+			return
+		}
+
+		if len(parts) == 1 && parts[0] != "" && r.Method == http.MethodGet {
+			refName := parts[0]
+			ds, err := dataSetRepo.FindByReferenceName(ctx, refName)
+			if err != nil {
+				httpError(w, http.StatusNotFound, err)
+				return
+			}
+			_ = json.NewEncoder(w).Encode(ds)
+			return
+		}
+	}
 
 	// Seed endpoints
 	if path == "seed" && r.Method == http.MethodPost {
