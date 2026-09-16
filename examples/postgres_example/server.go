@@ -176,9 +176,10 @@ func handlePostgresAPI(w http.ResponseWriter, r *http.Request, engine *project.E
 			refName := parts[0]
 			var reqBody struct {
 				FilterParams map[string]any `json:"filterParams"`
+				UserToken    any            `json:"userToken,omitempty"`
 			}
 			_ = json.NewDecoder(r.Body).Decode(&reqBody)
-			rows, err := dataSetService.Execute(ctx, refName, reqBody.FilterParams)
+			rows, err := dataSetService.ExecuteWithUserToken(ctx, refName, reqBody.FilterParams, reqBody.UserToken)
 			if err != nil {
 				httpError(w, http.StatusBadRequest, err)
 				return
