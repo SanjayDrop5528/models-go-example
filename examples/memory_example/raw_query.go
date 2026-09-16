@@ -1,3 +1,9 @@
+// Package main demonstrates dynamic in-memory AST querying.
+//
+// File: raw_query.go
+// Usage:
+//   Demonstrates AST queries using LIKE substring matching, ordering, and pagination
+//   directly across in-memory data structures.
 package main
 
 import (
@@ -8,6 +14,15 @@ import (
 )
 
 // RunMemoryRawQueryDemo demonstrates in-memory query AST with sorting, projection, and pagination.
+//
+// Purpose:
+//   Executes an AST query against the in-memory adapter verifying pattern matching and sorting.
+//
+// Where it is used:
+//   - In Memory example demonstration runner.
+//
+// When can it be used:
+//   - When verifying in-memory AST query capabilities.
 func RunMemoryRawQueryDemo(ctx context.Context, engine *project.Engine) error {
 	fmt.Println("\n--- [Memory Adapter: Dynamic Query AST Demo] ---")
 

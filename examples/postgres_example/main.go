@@ -1,6 +1,11 @@
 // Package main demonstrates the complete PostgreSQL adapter capabilities:
 // Dynamic Model Schema Migrations, Dynamic CRUD, Stored Functions, Stored Procedures,
 // Raw SQL Query AST, Atomic Multi-Model Transactions, and Interactive Swagger UI.
+//
+// File: main.go
+// Usage:
+//   Executable CLI / demo entrypoint orchestrating PostgreSQL CRUD, stored routines,
+//   raw queries, transaction execution, and starting the interactive Swagger HTTP server.
 package main
 
 import (
@@ -11,11 +16,30 @@ import (
 	postgres "github.com/SanjayDrop5528/models-go-postgres"
 )
 
+// main is the CLI entrypoint for PostgreSQL examples.
+//
+// Purpose:
+//   Dispatches to RunPostgresExample to run demos and optional Swagger server.
+//
+// Where it is used:
+//   - When executing `go run ./examples/postgres_example/main.go`.
+//
+// When can it be used:
+//   - To run PostgreSQL demonstrations locally.
 func main() {
 	RunPostgresExample()
 }
 
 // RunPostgresExample runs the complete suite of PostgreSQL demos and can launch the Swagger UI server.
+//
+// Purpose:
+//   Initializes PostgreSQL adapter and engine, and conditionally launches the Swagger UI server.
+//
+// Where it is used:
+//   - Called by main() and integration test suites.
+//
+// When can it be used:
+//   - Whenever executing PostgreSQL capability walkthroughs.
 func RunPostgresExample() {
 	// ctx := context.Background()
 	fmt.Println("=========================================================")

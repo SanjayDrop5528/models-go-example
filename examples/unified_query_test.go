@@ -1,3 +1,9 @@
+// Package examples_test provides integration tests and verification suites.
+//
+// File: unified_query_test.go
+// Usage:
+//   Cross-database integration tests asserting that a single unified query.Query AST
+//   compiles and evaluates consistently across PostgreSQL, MySQL, MongoDB, and In-Memory adapters.
 package examples_test
 
 import (
@@ -17,6 +23,15 @@ import (
 
 // TestUnifiedCrossDatabaseQuery demonstrates that the EXACT SAME query data structure
 // executes across PostgreSQL, MySQL, MongoDB, and In-Memory identically.
+//
+// Purpose:
+//   Validates cross-engine SQL and aggregation pipeline compilation against a single AST.
+//
+// Where it is used:
+//   - In CI/CD test execution (`make test-all`).
+//
+// When can it be used:
+//   - To verify multi-database compatibility for unified query models.
 func TestUnifiedCrossDatabaseQuery(t *testing.T) {
 	// 1. Construct ONE single unified query using the query builder
 	unifiedQuery := query.New().

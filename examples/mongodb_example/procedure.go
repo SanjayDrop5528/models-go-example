@@ -1,3 +1,9 @@
+// Package main illustrates MongoDB command and aggregation pipeline operations in place of SQL procedures.
+//
+// File: procedure.go
+// Usage:
+//   Demonstrates how SQL stored procedures are rejected by the compatibility guard,
+//   and shows how MongoDB aggregation commands (OpCommand) are executed instead.
 package main
 
 import (
@@ -11,6 +17,16 @@ import (
 )
 
 // RunMongoProcedureDemo demonstrates MongoDB command/pipeline capabilities versus SQL procedures.
+//
+// Purpose:
+//   Demonstrates that SQL stored procedures are gracefully rejected while MongoDB
+//   aggregation pipelines configured via OpCommand execute successfully.
+//
+// Where it is used:
+//   - In MongoDB example demonstration suite.
+//
+// When can it be used:
+//   - When demonstrating document aggregation pipelines or verifying SQL procedure guards in MongoDB.
 func RunMongoProcedureDemo(ctx context.Context, engine *project.Engine) error {
 	fmt.Println("\n--- [MongoDB: Procedure & Pipeline Execution Demo] ---")
 

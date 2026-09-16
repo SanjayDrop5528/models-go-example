@@ -1,3 +1,9 @@
+// Package main demonstrates runnable PostgreSQL integration workflows.
+//
+// File: function.go
+// Usage:
+//   Demonstrates database stored function registration, parameter validation,
+//   and generic invocation against PostgreSQL.
 package main
 
 import (
@@ -9,6 +15,15 @@ import (
 )
 
 // RunPostgresFunctionDemo demonstrates database function registration, parameter validation, and execution.
+//
+// Purpose:
+//   Registers stored function metadata (OperationConfig) and executes it via the project.Engine operation runner.
+//
+// Where it is used:
+//   - In examples/postgres_example/main.go.
+//
+// When can it be used:
+//   - When executing or verifying PostgreSQL stored functions via engine abstractions.
 func RunPostgresFunctionDemo(ctx context.Context, engine *project.Engine) error {
 	fmt.Println("\n--- [PostgreSQL: Stored Function Demo] ---")
 

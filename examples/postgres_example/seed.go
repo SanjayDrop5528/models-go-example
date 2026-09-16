@@ -1,3 +1,9 @@
+// Package main demonstrates runnable PostgreSQL integration workflows.
+//
+// File: seed.go
+// Usage:
+//   Seeds enterprise PostgreSQL schemas (organizations, departments, employees, project assignments,
+//   custom types), discovers live tables, and imports table structures into engine metadata catalogs.
 package main
 
 import (
@@ -15,6 +21,15 @@ import (
 
 // SeedPostgresModelConfigs seeds only the ModelConfig definitions (address, organization, department, employee, project_assignment).
 // It checks if each model_config exists: if not, it creates it; if already existing, it updates and maps it gracefully.
+//
+// Purpose:
+//   Initializes baseline entity metadata configs with orbital references and custom type flags.
+//
+// Where it is used:
+//   - In SeedPostgresDataModels and SeedEnterprisePostgresSchema.
+//
+// When can it be used:
+//   - When bootstrapping empty metadata stores or setting up demo schemas.
 func SeedPostgresModelConfigs(ctx context.Context, engine *project.Engine) ([]*model.ModelConfig, error) {
 	log.Println("[SEED] [ModelConfig] >>> Starting PostgreSQL ModelConfig Seeding & Mapping...")
 
@@ -92,6 +107,15 @@ func SeedPostgresModelConfigs(ctx context.Context, engine *project.Engine) ([]*m
 
 // SeedPostgresDataModels seeds only the DataModel field definitions mapped to each ModelConfig and compiles the live schemas.
 // If any model_config does not exist, it automatically ensures it is created first so relations and orbital refs can be mapped.
+//
+// Purpose:
+//   Creates column attribute definitions and triggers DDL migration compilation to establish tables in PostgreSQL.
+//
+// Where it is used:
+//   - In SeedEnterprisePostgresSchema.
+//
+// When can it be used:
+//   - When migrating model attribute definitions into database tables.
 func SeedPostgresDataModels(ctx context.Context, engine *project.Engine) (map[string][]*model.DataModel, error) {
 	log.Println("[SEED] [DataModel] >>> Starting PostgreSQL DataModel Field Seeding & Mapping...")
 
@@ -204,6 +228,15 @@ func SeedPostgresDataModels(ctx context.Context, engine *project.Engine) (map[st
 }
 
 // SeedPostgresSampleData inserts sample records for all seeded models.
+//
+// Purpose:
+//   Inserts demonstration records across organizations, departments, employees, and assignments.
+//
+// Where it is used:
+//   - In SeedEnterprisePostgresSchema.
+//
+// When can it be used:
+//   - When populating test tables with realistic multi-relational data.
 func SeedPostgresSampleData(ctx context.Context, engine *project.Engine) (map[string]any, error) {
 	log.Println("[SEED] [SampleData] >>> Starting PostgreSQL Sample Data Seeding...")
 
@@ -286,6 +319,15 @@ func SeedPostgresSampleData(ctx context.Context, engine *project.Engine) (map[st
 }
 
 // SeedEnterprisePostgresSchema executes the full seeding pipeline: ModelConfigs -> DataModels (with DDL schema compilation) -> Sample Records.
+//
+// Purpose:
+//   Orchestrates end-to-end model registration, table creation, sample insertion, and live schema introspection.
+//
+// Where it is used:
+//   - In Swagger server API endpoint POST /api/seed/enterprise.
+//
+// When can it be used:
+//   - To provision a full demonstration database environment on PostgreSQL.
 func SeedEnterprisePostgresSchema(ctx context.Context, engine *project.Engine) (map[string]any, error) {
 	log.Println("[SEED] =========================================================")
 	log.Println("[SEED] Starting Full Enterprise PostgreSQL Schema Seeding Pipeline")
@@ -332,12 +374,30 @@ func SeedEnterprisePostgresSchema(ctx context.Context, engine *project.Engine) (
 
 // ImportPostgresLiveSchema connects to live database, ensures system metadata tables exist inside the adapter,
 // introspects all tables, and automatically registers ModelConfig and DataModel field definitions directly via adapter.
+//
+// Purpose:
+//   Syncs database physical schema into engine metadata registers.
+//
+// Where it is used:
+//   - In SeedEnterprisePostgresSchema and Swagger handler POST /api/import/live.
+//
+// When can it be used:
+//   - When retrofitting existing database tables into dynamic models.
 func ImportPostgresLiveSchema(ctx context.Context, engine *project.Engine) (map[string]any, error) {
 	log.Println("[IMPORT] >>> Starting Live Database Schema Import directly via Adapter...")
 	return engine.ImportLiveMetadata(ctx)
 }
 
 // DiscoverPostgresTables queries information_schema to discover all live user tables in the specified database/schema.
+//
+// Purpose:
+//   Lists all physical tables, schemas, and column counts present in PostgreSQL.
+//
+// Where it is used:
+//   - In Swagger handler GET /api/discover/tables.
+//
+// When can it be used:
+//   - When exploring available tables before selective import.
 func DiscoverPostgresTables(ctx context.Context, engine *project.Engine, dbName, schemaName, customDSN string) (map[string]any, error) {
 	targetDSN := customDSN
 	if targetDSN == "" {
@@ -414,6 +474,15 @@ func DiscoverPostgresTables(ctx context.Context, engine *project.Engine, dbName,
 }
 
 // ImportPostgresCustomDatabase introspects live tables from a specified database (e.g. uat_mineone) and populates ModelConfig and DataModel registries.
+//
+// Purpose:
+//   Connects to an arbitrary PostgreSQL database, introspects tables, and imports models into the engine.
+//
+// Where it is used:
+//   - In Swagger handler POST /api/import/database.
+//
+// When can it be used:
+//   - When migrating schemas from external PostgreSQL databases into the metadata store.
 func ImportPostgresCustomDatabase(ctx context.Context, engine *project.Engine, dbName, schemaName, customDSN string, selectedTables []string) (map[string]any, error) {
 	if dbName == "" {
 		dbName = "uat_mineone"
@@ -438,7 +507,6 @@ func ImportPostgresCustomDatabase(ctx context.Context, engine *project.Engine, d
 	if err != nil {
 		return nil, fmt.Errorf("failed introspecting database '%s': %w", dbName, err)
 	}
-
 
 	// Filter by selectedTables if provided
 	selectedMap := make(map[string]bool)
@@ -500,7 +568,6 @@ func ImportPostgresCustomDatabase(ctx context.Context, engine *project.Engine, d
 		}
 	}
 
-
 	log.Printf("[IMPORT] ✔ Successfully imported %d ModelConfig(s) and %d DataModel field(s) from database '%s'!", len(importedConfigs), len(importedFields), dbName)
 
 	return map[string]any{
@@ -515,6 +582,16 @@ func ImportPostgresCustomDatabase(ctx context.Context, engine *project.Engine, d
 	}, nil
 }
 
+// replaceDatabaseInDSN swaps the database segment of a PostgreSQL DSN URI with a new database name.
+//
+// Purpose:
+//   Replaces the database path token in connection strings (e.g. postgres://user:pass@host:5432/old_db?opt=val).
+//
+// Where it is used:
+//   - In DiscoverPostgresTables and ImportPostgresCustomDatabase.
+//
+// When can it be used:
+//   - When connecting to secondary databases using a base DSN template.
 func replaceDatabaseInDSN(dsn, newDB string) string {
 	if strings.Contains(dsn, "/") {
 		lastSlash := strings.LastIndex(dsn, "/")

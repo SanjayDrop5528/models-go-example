@@ -1,3 +1,9 @@
+// Package main demonstrates ACID transaction management for MySQL.
+//
+// File: transaction.go
+// Usage:
+//   Demonstrates unit-of-work transactional execution against MySQL, including staged commits
+//   and automatic rollbacks on error.
 package main
 
 import (
@@ -9,6 +15,15 @@ import (
 )
 
 // RunMySQLTransactionDemo demonstrates unit-of-work transactions in MySQL with rollback capabilities.
+//
+// Purpose:
+//   Executes multiple database writes inside an atomic transaction, validating commit success and rollback upon failure.
+//
+// Where it is used:
+//   - In MySQL example CLI runner and testing workflows.
+//
+// When can it be used:
+//   - When executing multiple related MySQL mutations that require all-or-nothing transactional guarantees.
 func RunMySQLTransactionDemo(ctx context.Context, engine *project.Engine) error {
 	fmt.Println("\n--- [MySQL: Unit-of-Work Transaction Demo] ---")
 

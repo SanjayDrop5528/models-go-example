@@ -1,3 +1,9 @@
+// Package main demonstrates runnable PostgreSQL integration workflows.
+//
+// File: procedure.go
+// Usage:
+//   Demonstrates PostgreSQL stored procedure registration, argument validation,
+//   and generic invocation generating dialect CALL statements.
 package main
 
 import (
@@ -9,6 +15,15 @@ import (
 )
 
 // RunPostgresProcedureDemo demonstrates stored procedure registration, calling, and execution.
+//
+// Purpose:
+//   Registers stored procedure metadata and invokes it via the generic project engine execution interface.
+//
+// Where it is used:
+//   - In examples/postgres_example/main.go.
+//
+// When can it be used:
+//   - When executing or verifying PostgreSQL stored procedures.
 func RunPostgresProcedureDemo(ctx context.Context, engine *project.Engine) error {
 	fmt.Println("\n--- [PostgreSQL: Stored Procedure Demo] ---")
 

@@ -1,3 +1,9 @@
+// Package main provides the HTTP REST server and Swagger UI documentation for MongoDB demonstrations.
+//
+// File: server.go
+// Usage:
+//   Initializes an HTTP server exposing dynamic model configuration endpoints, schema validation preview/apply,
+//   CRUD document operations, custom command execution, and interactive Swagger UI documentation for MongoDB.
 package main
 
 import (
@@ -20,6 +26,15 @@ import (
 )
 
 // StartSwaggerServer starts a MongoDB REST API server with interactive Swagger UI.
+//
+// Purpose:
+//   Restores metadata, binds REST API endpoints, and hosts Swagger UI on the designated network port.
+//
+// Where it is used:
+//   - In RunMongoDBExample when server mode is activated.
+//
+// When can it be used:
+//   - When serving MongoDB dynamic models and operations via an interactive HTTP service.
 func StartSwaggerServer(port string, engine *project.Engine) *http.Server {
 	ctx := context.Background()
 	log.Println("[Server Startup] Restoring metadata definitions from database...")
@@ -60,6 +75,17 @@ func StartSwaggerServer(port string, engine *project.Engine) *http.Server {
 	return server
 }
 
+// handleMongoAPI handles routing and processing for MongoDB REST API endpoints.
+//
+// Purpose:
+//   Dispatches HTTP requests for validation, schema migrations, dynamic dataset queries,
+//   document CRUD, operations, and transactions to the MongoDB engine.
+//
+// Where it is used:
+//   - Registered as HTTP handler in StartSwaggerServer.
+//
+// When can it be used:
+//   - For all incoming client HTTP requests under /api/... routes.
 func handleMongoAPI(w http.ResponseWriter, r *http.Request, engine *project.Engine) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -726,6 +752,16 @@ func handleMongoAPI(w http.ResponseWriter, r *http.Request, engine *project.Engi
 	httpError(w, http.StatusNotFound, fmt.Errorf("route '%s' not found", r.URL.Path))
 }
 
+// httpError writes uniform JSON error envelopes with HTTP status codes.
+//
+// Purpose:
+//   Extracts validation and internal error descriptions and formats them into structured JSON error payloads.
+//
+// Where it is used:
+//   - In handleMongoAPI error handling branches.
+//
+// When can it be used:
+//   - Whenever an HTTP request fails validation or internal processing.
 func httpError(w http.ResponseWriter, code int, err error) {
 	w.WriteHeader(code)
 	resp := map[string]any{
@@ -741,6 +777,16 @@ func httpError(w http.ResponseWriter, code int, err error) {
 	_ = json.NewEncoder(w).Encode(resp)
 }
 
+// renderSwaggerUIHTML constructs the standalone HTML interface for Swagger UI.
+//
+// Purpose:
+//   Serves HTML loading Swagger UI and referencing the MongoDB OpenAPI specification document.
+//
+// Where it is used:
+//   - In the /swagger/ endpoint handler of StartSwaggerServer.
+//
+// When can it be used:
+//   - When users access the /swagger/ route in a web browser.
 func renderSwaggerUIHTML(title, docURL string) string {
 	return fmt.Sprintf(`<!DOCTYPE html>
 <html lang="en">
@@ -778,6 +824,16 @@ func renderSwaggerUIHTML(title, docURL string) string {
 </html>`, title, docURL)
 }
 
+// getMongoOpenAPISpec returns the OpenAPI 3.0 specification JSON string for MongoDB.
+//
+// Purpose:
+//   Generates the OpenAPI documentation containing paths, models, query parameters, and responses for the MongoDB API.
+//
+// Where it is used:
+//   - In the /swagger/doc.json endpoint of StartSwaggerServer.
+//
+// When can it be used:
+//   - When Swagger UI or clients request OpenAPI documentation.
 func getMongoOpenAPISpec() string {
 	return `{
   "openapi": "3.0.0",

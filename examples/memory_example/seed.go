@@ -1,3 +1,9 @@
+// Package main provides enterprise schema seeding and demo data initialization for the in-memory adapter.
+//
+// File: seed.go
+// Usage:
+//   Bootstraps the enterprise test domain in memory, creating ModelConfigs, DataModel field definitions,
+//   compiling schema structures, and inserting sample business records.
 package main
 
 import (
@@ -11,6 +17,15 @@ import (
 
 // SeedMemoryModelConfigs seeds only the ModelConfig definitions (address, organization, department, employee, project_assignment).
 // It checks if each model_config exists: if not, it creates it; if already existing, it updates and maps it gracefully.
+//
+// Purpose:
+//   Registers the 5 core enterprise ModelConfig entities into the in-memory metadata catalog.
+//
+// Where it is used:
+//   - In SeedEnterpriseMemorySchema and the /api/seed/model-configs endpoint.
+//
+// When can it be used:
+//   - During initial in-memory environment bootstrap.
 func SeedMemoryModelConfigs(ctx context.Context, engine *project.Engine) ([]*model.ModelConfig, error) {
 	log.Println("[SEED] [ModelConfig] >>> Starting In-Memory ModelConfig Seeding & Mapping...")
 
@@ -88,6 +103,15 @@ func SeedMemoryModelConfigs(ctx context.Context, engine *project.Engine) ([]*mod
 
 // SeedMemoryDataModels seeds only the DataModel field definitions mapped to each ModelConfig and compiles the live schemas.
 // If any model_config does not exist, it automatically ensures it is created first so relations and orbital refs can be mapped.
+//
+// Purpose:
+//   Registers all fields, configures orbital relationships and data types, and compiles in-memory schemas.
+//
+// Where it is used:
+//   - In SeedEnterpriseMemorySchema and the /api/seed/data-models endpoint.
+//
+// When can it be used:
+//   - When establishing schema rules and column constraints in the memory adapter.
 func SeedMemoryDataModels(ctx context.Context, engine *project.Engine) (map[string][]*model.DataModel, error) {
 	log.Println("[SEED] [DataModel] >>> Starting In-Memory DataModel Field Seeding & Mapping...")
 
@@ -200,6 +224,15 @@ func SeedMemoryDataModels(ctx context.Context, engine *project.Engine) (map[stri
 }
 
 // SeedMemorySampleData inserts sample records for all seeded models.
+//
+// Purpose:
+//   Populates initial sample business records in memory across all defined models.
+//
+// Where it is used:
+//   - In SeedEnterpriseMemorySchema and the /api/seed/data endpoint.
+//
+// When can it be used:
+//   - When inserting test data after model schema application.
 func SeedMemorySampleData(ctx context.Context, engine *project.Engine) (map[string]any, error) {
 	log.Println("[SEED] [SampleData] >>> Starting In-Memory Sample Data Seeding...")
 
@@ -282,6 +315,15 @@ func SeedMemorySampleData(ctx context.Context, engine *project.Engine) (map[stri
 }
 
 // SeedEnterpriseMemorySchema executes the full seeding pipeline: ModelConfigs -> DataModels (with schema compilation) -> Sample Records.
+//
+// Purpose:
+//   Runs the complete enterprise seed workflow for the in-memory adapter in one operation.
+//
+// Where it is used:
+//   - In memory example test suites and the /api/seed master endpoint.
+//
+// When can it be used:
+//   - For complete initialization of the in-memory demo dataset.
 func SeedEnterpriseMemorySchema(ctx context.Context, engine *project.Engine) (map[string]any, error) {
 	log.Println("[SEED] =========================================================")
 	log.Println("[SEED] Starting Full Enterprise In-Memory Schema Seeding Pipeline")

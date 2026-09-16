@@ -1,3 +1,9 @@
+// Package main demonstrates runnable PostgreSQL integration workflows.
+//
+// File: transaction.go
+// Usage:
+//   Demonstrates atomic multi-model database transactions, automatic commits,
+//   and rollback safety on PostgreSQL via project.Engine.
 package main
 
 import (
@@ -9,6 +15,15 @@ import (
 )
 
 // RunPostgresTransactionDemo demonstrates atomic unit-of-work transactions with commit and automatic rollback.
+//
+// Purpose:
+//   Executes multi-statement transactional units of work, proving atomic commit on success and automatic rollback on error.
+//
+// Where it is used:
+//   - In examples/postgres_example/main.go.
+//
+// When can it be used:
+//   - When executing multiple database mutations that must succeed or fail as an indivisible unit.
 func RunPostgresTransactionDemo(ctx context.Context, engine *project.Engine) error {
 	fmt.Println("\n--- [PostgreSQL: Multi-Model Transaction Demo] ---")
 

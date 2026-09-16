@@ -1,3 +1,9 @@
+// Package main provides the HTTP REST server and Swagger UI documentation for MySQL demonstrations.
+//
+// File: server.go
+// Usage:
+//   Initializes an HTTP server exposing dynamic model configuration endpoints, schema migration preview/apply,
+//   CRUD data operations, stored procedure execution, and interactive Swagger UI documentation for MySQL.
 package main
 
 import (
@@ -18,6 +24,15 @@ import (
 )
 
 // StartSwaggerServer starts a MySQL REST API server with interactive Swagger UI.
+//
+// Purpose:
+//   Bootstraps and runs the HTTP server with registered endpoints and Swagger UI on the specified port.
+//
+// Where it is used:
+//   - In main.go server runner mode.
+//
+// When can it be used:
+//   - When launching the MySQL example application as an interactive HTTP API service.
 func StartSwaggerServer(port string, engine *project.Engine) *http.Server {
 	ctx := context.Background()
 	log.Println("[Server Startup] Restoring metadata definitions from database...")
@@ -58,6 +73,17 @@ func StartSwaggerServer(port string, engine *project.Engine) *http.Server {
 	return server
 }
 
+// handleMySQLAPI routes and dispatches incoming HTTP API requests.
+//
+// Purpose:
+//   Dispatches HTTP REST requests for schema discovery, seeding, validation, model configs,
+//   fields, migrations, transactions, and CRUD operations to the appropriate engine services.
+//
+// Where it is used:
+//   - Handled by the HTTP multiplexer in StartSwaggerServer.
+//
+// When can it be used:
+//   - For every incoming HTTP API request directed to /api/... endpoints.
 func handleMySQLAPI(w http.ResponseWriter, r *http.Request, engine *project.Engine) {
 	w.Header().Set("Content-Type", "application/json")
 	ctx := r.Context()
@@ -668,6 +694,16 @@ func handleMySQLAPI(w http.ResponseWriter, r *http.Request, engine *project.Engi
 	httpError(w, http.StatusNotFound, fmt.Errorf("route '%s' not found", r.URL.Path))
 }
 
+// httpError formats and writes structured error responses to HTTP clients.
+//
+// Purpose:
+//   Extracts validation and general errors and encodes them as uniform JSON error envelopes with status codes.
+//
+// Where it is used:
+//   - In handleMySQLAPI error return paths.
+//
+// When can it be used:
+//   - When an operation encounters an error and needs to respond with structured JSON error details.
 func httpError(w http.ResponseWriter, code int, err error) {
 	w.WriteHeader(code)
 	resp := map[string]any{
@@ -683,6 +719,16 @@ func httpError(w http.ResponseWriter, code int, err error) {
 	_ = json.NewEncoder(w).Encode(resp)
 }
 
+// renderSwaggerUIHTML generates the HTML page hosting the Swagger UI bundle.
+//
+// Purpose:
+//   Returns standalone HTML embedding Swagger UI scripts and referencing the OpenAPI JSON specification.
+//
+// Where it is used:
+//   - In the /swagger/ route handler of StartSwaggerServer.
+//
+// When can it be used:
+//   - When a browser client accesses the /swagger/ endpoint.
 func renderSwaggerUIHTML(title, docURL string) string {
 	return fmt.Sprintf(`<!DOCTYPE html>
 <html lang="en">
@@ -720,6 +766,16 @@ func renderSwaggerUIHTML(title, docURL string) string {
 </html>`, title, docURL)
 }
 
+// getMySQLOpenAPISpec returns the raw OpenAPI 3.0 specification JSON string for the MySQL API.
+//
+// Purpose:
+//   Defines endpoints, parameter schemas, request/response models, and tags for the MySQL API documentation.
+//
+// Where it is used:
+//   - In the /swagger/doc.json route handler of StartSwaggerServer.
+//
+// When can it be used:
+//   - When Swagger UI or an API client requests the OpenAPI documentation specification.
 func getMySQLOpenAPISpec() string {
 	return `{
   "openapi": "3.0.0",

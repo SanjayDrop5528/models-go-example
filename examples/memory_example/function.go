@@ -1,3 +1,9 @@
+// Package main demonstrates in-memory function registration and execution.
+//
+// File: function.go
+// Usage:
+//   Demonstrates how to register and execute pure in-memory functions with typed arguments
+//   and return values using the operation subsystem.
 package main
 
 import (
@@ -9,6 +15,15 @@ import (
 )
 
 // RunMemoryFunctionDemo demonstrates in-memory operation/function execution.
+//
+// Purpose:
+//   Registers a typed memory function and executes it through the engine, displaying status and output.
+//
+// Where it is used:
+//   - In Memory example demonstration runner.
+//
+// When can it be used:
+//   - When executing custom compute functions or mocks within an in-memory runtime.
 func RunMemoryFunctionDemo(ctx context.Context, engine *project.Engine) error {
 	fmt.Println("\n--- [Memory Adapter: Function Demo] ---")
 

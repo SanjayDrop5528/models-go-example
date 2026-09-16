@@ -1,3 +1,9 @@
+// Package main provides enterprise schema seeding, introspection, and demo data setup for MySQL.
+//
+// File: seed.go
+// Usage:
+//   Contains seeding pipelines that register enterprise ModelConfig and DataModel metadata,
+//   compile and apply MySQL DDL tables, populate test records, and introspect external MySQL databases.
 package main
 
 import (
@@ -12,9 +18,17 @@ import (
 	mysql "github.com/SanjayDrop5528/models-go-mysql"
 )
 
-
 // SeedMySQLModelConfigs seeds only the ModelConfig definitions (address, organization, department, employee, project_assignment).
 // It checks if each model_config exists: if not, it creates it; if already existing, it updates and maps it gracefully.
+//
+// Purpose:
+//   Idempotently registers enterprise ModelConfig entities within the MySQL metadata store.
+//
+// Where it is used:
+//   - In SeedEnterpriseMySQLSchema and server seed routes.
+//
+// When can it be used:
+//   - During initial database setup or bootstrap when initializing model config definitions.
 func SeedMySQLModelConfigs(ctx context.Context, engine *project.Engine) ([]*model.ModelConfig, error) {
 	log.Println("[SEED] [ModelConfig] >>> Starting MySQL ModelConfig Seeding & Mapping...")
 
@@ -92,6 +106,15 @@ func SeedMySQLModelConfigs(ctx context.Context, engine *project.Engine) ([]*mode
 
 // SeedMySQLDataModels seeds only the DataModel field definitions mapped to each ModelConfig and compiles the live schemas.
 // If any model_config does not exist, it automatically ensures it is created first so relations and orbital refs can be mapped.
+//
+// Purpose:
+//   Creates all field definitions across models, validates orbital references, and compiles/applies live DDL tables.
+//
+// Where it is used:
+//   - Called by SeedEnterpriseMySQLSchema and the /api/seed/data-models endpoint.
+//
+// When can it be used:
+//   - When bootstrapping column schemas and relational integrity constraints in MySQL.
 func SeedMySQLDataModels(ctx context.Context, engine *project.Engine) (map[string][]*model.DataModel, error) {
 	log.Println("[SEED] [DataModel] >>> Starting MySQL DataModel Field Seeding & Mapping...")
 
@@ -204,6 +227,15 @@ func SeedMySQLDataModels(ctx context.Context, engine *project.Engine) (map[strin
 }
 
 // SeedMySQLSampleData inserts sample records for all seeded models.
+//
+// Purpose:
+//   Inserts baseline test records for organizations, departments, employees, and assignments.
+//
+// Where it is used:
+//   - In SeedEnterpriseMySQLSchema and the /api/seed/data endpoint.
+//
+// When can it be used:
+//   - When populating initial demo data into MySQL tables after schema migration.
 func SeedMySQLSampleData(ctx context.Context, engine *project.Engine) (map[string]any, error) {
 	log.Println("[SEED] [SampleData] >>> Starting MySQL Sample Data Seeding...")
 
@@ -286,6 +318,15 @@ func SeedMySQLSampleData(ctx context.Context, engine *project.Engine) (map[strin
 }
 
 // SeedEnterpriseMySQLSchema executes the full seeding pipeline: ModelConfigs -> DataModels (with DDL schema compilation) -> Sample Records.
+//
+// Purpose:
+//   Orchestrates the end-to-end MySQL seeding workflow from configuration to live data insertion.
+//
+// Where it is used:
+//   - In main demo runner and the /api/seed master endpoint.
+//
+// When can it be used:
+//   - When executing a one-step complete initialization of the MySQL demo database.
 func SeedEnterpriseMySQLSchema(ctx context.Context, engine *project.Engine) (map[string]any, error) {
 	log.Println("[SEED] =========================================================")
 	log.Println("[SEED] Starting Full Enterprise MySQL Schema Seeding Pipeline")
@@ -327,6 +368,15 @@ func SeedEnterpriseMySQLSchema(ctx context.Context, engine *project.Engine) (map
 }
 
 // DiscoverMySQLTables queries information_schema to discover all live user tables in the specified MySQL database/schema.
+//
+// Purpose:
+//   Introspects MySQL database catalogs to list non-system user tables and metadata.
+//
+// Where it is used:
+//   - In the /api/schema/discover-tables endpoint and schema discovery UI.
+//
+// When can it be used:
+//   - When introspecting existing MySQL databases for reverse engineering or table inspection.
 func DiscoverMySQLTables(ctx context.Context, engine *project.Engine, dbName, schemaName, customDSN string) (map[string]any, error) {
 	targetDSN := customDSN
 	if targetDSN == "" {
@@ -389,6 +439,15 @@ func DiscoverMySQLTables(ctx context.Context, engine *project.Engine, dbName, sc
 }
 
 // ImportMySQLCustomDatabase introspects live MySQL tables and populates ModelConfig and DataModel registries.
+//
+// Purpose:
+//   Extracts live table definitions and columns from MySQL and imports them into engine registries.
+//
+// Where it is used:
+//   - In the /api/schema/import and /api/seed/import endpoints.
+//
+// When can it be used:
+//   - When importing existing database tables into the dynamic data model engine.
 func ImportMySQLCustomDatabase(ctx context.Context, engine *project.Engine, dbName, schemaName, customDSN string, selectedTables []string) (map[string]any, error) {
 	if dbName == "" {
 		dbName = "enterprise_db"
@@ -476,6 +535,16 @@ func ImportMySQLCustomDatabase(ctx context.Context, engine *project.Engine, dbNa
 	}, nil
 }
 
+// replaceMySQLDatabaseInDSN replaces the database name in a standard MySQL DSN string.
+//
+// Purpose:
+//   Swaps the target database component within a MySQL connection string while preserving query parameters.
+//
+// Where it is used:
+//   - In DiscoverMySQLTables and ImportMySQLCustomDatabase.
+//
+// When can it be used:
+//   - When connecting to an alternative database name on the same MySQL host/port.
 func replaceMySQLDatabaseInDSN(dsn, newDB string) string {
 	if strings.Contains(dsn, "/") {
 		lastSlash := strings.LastIndex(dsn, "/")

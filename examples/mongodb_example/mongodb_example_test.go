@@ -1,3 +1,9 @@
+// Package main provides automated integration and smoke tests for the MongoDB example.
+//
+// File: mongodb_example_test.go
+// Usage:
+//   Contains test cases exercising MongoDB example pipelines, Swagger endpoints,
+//   dataset definitions, dynamic models, and validation rules.
 package main
 
 import (
@@ -11,10 +17,30 @@ import (
 	mongodb "github.com/SanjayDrop5528/models-go-mongodb"
 )
 
+// TestMongoDBExample tests the complete sequence of MongoDB demonstration routines.
+//
+// Purpose:
+//   Executes the entire MongoDB example demonstration workflow to ensure all steps succeed without errors.
+//
+// Where it is used:
+//   - In `go test ./examples/mongodb_example` test suite runs.
+//
+// When can it be used:
+//   - During regression testing and CI verification of MongoDB example capabilities.
 func TestMongoDBExample(t *testing.T) {
 	RunMongoDBExample()
 }
 
+// TestMongoSwaggerEndpoints tests the Swagger UI and REST API route handling for MongoDB.
+//
+// Purpose:
+//   Validates HTTP responses for Swagger UI documentation endpoints and data operations.
+//
+// Where it is used:
+//   - In MongoDB example test suite.
+//
+// When can it be used:
+//   - When verifying Swagger UI rendering and REST endpoints in MongoDB example.
 func TestMongoSwaggerEndpoints(t *testing.T) {
 	mongoAdapter := mongodb.NewMongoAdapter("", "catalog_db")
 	proj, err := project.NewProject(project.ProjectConfig{
@@ -79,6 +105,16 @@ func TestMongoSwaggerEndpoints(t *testing.T) {
 	}
 }
 
+// TestMongoDB_Dataset_EndToEnd verifies full lifecycle dataset operations in MongoDB.
+//
+// Purpose:
+//   Tests creation, retrieval, execution, updating, and deletion of datasets in MongoDB.
+//
+// Where it is used:
+//   - In MongoDB example test suite.
+//
+// When can it be used:
+//   - When validating end-to-end dataset services on top of MongoDB adapter.
 func TestMongoDB_Dataset_EndToEnd(t *testing.T) {
 	mongoAdapter := mongodb.NewMongoAdapter("", "catalog_db")
 	proj, err := project.NewProject(project.ProjectConfig{
@@ -223,6 +259,16 @@ func TestMongoDB_Dataset_EndToEnd(t *testing.T) {
 	}
 }
 
+// TestMongoDB_ModelConfigAndDataModel_Smoke tests ModelConfig and DataModel registration smoke tests.
+//
+// Purpose:
+//   Validates model configuration and field mapping lifecycle via HTTP REST routes.
+//
+// Where it is used:
+//   - In MongoDB example test suite.
+//
+// When can it be used:
+//   - When verifying model metadata CRUD operations against the MongoDB server.
 func TestMongoDB_ModelConfigAndDataModel_Smoke(t *testing.T) {
 	mongoAdapter := mongodb.NewMongoAdapter("", "catalog_db")
 	proj, err := project.NewProject(project.ProjectConfig{
@@ -319,6 +365,16 @@ func TestMongoDB_ModelConfigAndDataModel_Smoke(t *testing.T) {
 	}
 }
 
+// TestMongoDB_Validation_AllEndpoints verifies validation endpoints for models, data, and orbital references.
+//
+// Purpose:
+//   Tests constraint, model, and reference validation handlers against various valid and invalid payloads.
+//
+// Where it is used:
+//   - In MongoDB example test suite.
+//
+// When can it be used:
+//   - When testing validation routing and error response envelopes for MongoDB.
 func TestMongoDB_Validation_AllEndpoints(t *testing.T) {
 	mongoAdapter := mongodb.NewMongoAdapter("", "catalog_db")
 	proj, err := project.NewProject(project.ProjectConfig{

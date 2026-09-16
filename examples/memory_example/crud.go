@@ -1,3 +1,9 @@
+// Package main demonstrates dynamic in-memory CRUD operations and schema evolution.
+//
+// File: crud.go
+// Usage:
+//   Demonstrates defining models, creating, querying, updating, patching,
+//   and deleting records entirely in memory without requiring a database engine.
 package main
 
 import (
@@ -10,6 +16,15 @@ import (
 )
 
 // RunMemoryCRUDDemo demonstrates in-memory model lifecycle, schema diff evolution, and CRUD operations.
+//
+// Purpose:
+//   Registers an in-memory user model, compiles its schema, and executes complete CRUD and AST query lifecycles.
+//
+// Where it is used:
+//   - In Memory example demonstration runner and integration tests.
+//
+// When can it be used:
+//   - When demonstrating fast in-memory prototyping, unit tests, or ephemeral storage.
 func RunMemoryCRUDDemo(ctx context.Context, engine *project.Engine) error {
 	fmt.Println("\n--- [Memory Adapter: Dynamic CRUD & Schema Evolution Demo] ---")
 

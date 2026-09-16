@@ -1,3 +1,9 @@
+// Package main demonstrates in-memory procedure registration and execution.
+//
+// File: procedure.go
+// Usage:
+//   Demonstrates how to register and execute in-memory procedure operations
+//   with input arguments via the engine.
 package main
 
 import (
@@ -9,6 +15,15 @@ import (
 )
 
 // RunMemoryProcedureDemo demonstrates in-memory procedure execution.
+//
+// Purpose:
+//   Registers an in-memory procedure and executes it with arguments, reporting execution status.
+//
+// Where it is used:
+//   - In Memory example demonstration runner.
+//
+// When can it be used:
+//   - When demonstrating procedure handling or simulated maintenance tasks in memory.
 func RunMemoryProcedureDemo(ctx context.Context, engine *project.Engine) error {
 	fmt.Println("\n--- [Memory Adapter: Procedure Demo] ---")
 

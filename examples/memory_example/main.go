@@ -1,5 +1,10 @@
 // Package main demonstrates complete Memory adapter capabilities:
 // In-Memory Model Lifecycle, Diff Evolution, Dynamic CRUD, Operations, Query AST, Transactions, and Interactive Swagger UI.
+//
+// File: main.go
+// Usage:
+//   Serves as the entrypoint for the in-memory adapter demonstrations, running lifecycle demos
+//   and optionally serving the Swagger UI REST server.
 package main
 
 import (
@@ -10,11 +15,31 @@ import (
 	"os"
 )
 
+// main is the CLI entrypoint for the in-memory demonstration suite.
+//
+// Purpose:
+//   Calls RunMemoryExample to run the in-memory adapter test suite.
+//
+// Where it is used:
+//   - Executed upon `go run main.go`.
+//
+// When can it be used:
+//   - When executing the memory example executable.
 func main() {
 	RunMemoryExample()
 }
 
 // RunMemoryExample runs the complete suite of Memory adapter demos and can launch the Swagger UI server.
+//
+// Purpose:
+//   Instantiates the in-memory engine, runs CRUD, functions, procedures, queries, and transactions,
+//   and conditionally starts the HTTP Swagger documentation server.
+//
+// Where it is used:
+//   - In main() and automated example test packages.
+//
+// When can it be used:
+//   - When demonstrating or verifying in-memory storage features.
 func RunMemoryExample() {
 	ctx := context.Background()
 	fmt.Println("=========================================================")

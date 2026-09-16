@@ -13,29 +13,48 @@
 // @host      localhost:8080
 // @BasePath  /
 
+// Package main runs the standalone example REST server exposing the Dynamic Model Engine,
+// Schema Migration API, Swagger UI, and database adapters.
+//
+// File: main.go
+// Usage:
+//   Bootstraps the Fiber v2 HTTP server, wires database adapters (Postgres, MySQL, MongoDB, Memory),
+//   initializes model/schema/CRUD services, seeds initial demo schemas, and handles graceful shutdown.
 package main
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"github.com/SanjayDrop5528/models-go-memory"
-	"github.com/SanjayDrop5528/models-go-mongodb"
-	"github.com/SanjayDrop5528/models-go-mysql"
-	"github.com/SanjayDrop5528/models-go-postgres"
-	"github.com/SanjayDrop5528/models-go-example/api"
+	"os"
+	"os/signal"
+	"syscall"
+
 	"github.com/SanjayDrop5528/models-go-engine/adapter"
 	"github.com/SanjayDrop5528/models-go-engine/crud"
 	"github.com/SanjayDrop5528/models-go-engine/model"
 	"github.com/SanjayDrop5528/models-go-engine/registry"
 	"github.com/SanjayDrop5528/models-go-engine/service"
-	"os"
-	"os/signal"
-	"syscall"
+	"github.com/SanjayDrop5528/models-go-example/api"
+	"github.com/SanjayDrop5528/models-go-memory"
+	"github.com/SanjayDrop5528/models-go-mongodb"
+	"github.com/SanjayDrop5528/models-go-mysql"
+	"github.com/SanjayDrop5528/models-go-postgres"
 
 	_ "github.com/SanjayDrop5528/models-go-example/docs" // Swagger docs registration
 )
 
+// main starts the dynamic model engine server.
+//
+// Purpose:
+//   Initializes adapters, registers model and schema services, seeds demo data,
+//   starts Fiber HTTP listener on configured PORT, and waits for OS interruption signals.
+//
+// Where it is used:
+//   - Entrypoint when running `go run ./cmd/server/main.go` or Docker containers.
+//
+// When can it be used:
+//   - To launch the primary dynamic model management service.
 func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -97,6 +116,16 @@ func main() {
 	log.Println("Server stopped")
 }
 
+// seedExampleModel seeds sample model configs and field attributes into the model registry.
+//
+// Purpose:
+//   Populates initial Address (reusable type), Department, and Employee entities with orbital references.
+//
+// Where it is used:
+//   - Called during server startup in main().
+//
+// When can it be used:
+//   - For initial sandbox and demonstration environments.
 func seedExampleModel(ms *service.ModelService) {
 	ctx := context.Background()
 

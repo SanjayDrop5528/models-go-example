@@ -1,8 +1,16 @@
 // Package api provides HTTP REST routing and request handling using Fiber.
+//
+// File: router.go
+// Usage:
+//   Defines the HTTP REST API router, Swagger endpoint mappings, CRUD controller handlers,
+//   schema diff/apply preview endpoints, and data/model validation endpoints.
 package api
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/SanjayDrop5528/models-go-engine/crud"
 	"github.com/SanjayDrop5528/models-go-engine/diff"
 	"github.com/SanjayDrop5528/models-go-engine/model"
@@ -10,8 +18,6 @@ import (
 	"github.com/SanjayDrop5528/models-go-engine/query"
 	"github.com/SanjayDrop5528/models-go-engine/service"
 	"github.com/SanjayDrop5528/models-go-engine/validation"
-	"strconv"
-	"strings"
 
 	_ "github.com/SanjayDrop5528/models-go-example/docs" // Swagger generated docs
 
@@ -30,6 +36,16 @@ type Router struct {
 }
 
 // NewApp creates and configures a new Fiber App instance with all routes registered.
+//
+// Purpose:
+//   Constructs the Fiber HTTP application, registers middleware (CORS, Recover, Logger),
+//   binds Swagger UI documentation routes, and registers all API endpoint handlers.
+//
+// Where it is used:
+//   - In cmd/server/main.go to initialize the runnable HTTP server.
+//
+// When can it be used:
+//   - Whenever starting the Dynamic Model Engine HTTP REST service.
 func NewApp(ms *service.ModelService, ss *service.SchemaService, ce *crud.Engine) *fiber.App {
 	app := fiber.New(fiber.Config{
 		AppName:      "Dynamic Model Engine API",
@@ -67,6 +83,16 @@ func NewApp(ms *service.ModelService, ss *service.SchemaService, ce *crud.Engine
 }
 
 // Register attaches the API route groups to the provided Fiber router.
+//
+// Purpose:
+//   Wires all model management, schema migration, CRUD data manipulation, and validation endpoints
+//   under the /api prefix.
+//
+// Where it is used:
+//   - In NewApp to mount routing definitions onto the Fiber router.
+//
+// When can it be used:
+//   - When binding API routes to a Fiber app or sub-router.
 func (r *Router) Register(app fiber.Router) {
 	apiGroup := app.Group("/api")
 
@@ -668,6 +694,16 @@ func (r *Router) deleteRecord(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"message": "Record deleted successfully"})
 }
 
+// parseQuery extracts filtering, pagination, and sorting parameters from HTTP query arguments.
+//
+// Purpose:
+//   Translates query string parameters (?limit=10&offset=0&sort=-name&field=val) into a query.Query AST.
+//
+// Where it is used:
+//   - In findRecords handler for data collection retrieval.
+//
+// When can it be used:
+//   - When parsing HTTP request queries for dynamic record filtering.
 func (r *Router) parseQuery(c *fiber.Ctx) query.Query {
 	q := query.NewQuery()
 

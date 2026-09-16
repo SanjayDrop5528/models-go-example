@@ -1,3 +1,9 @@
+// Package main demonstrates MongoDB multi-document transactional sessions.
+//
+// File: transaction.go
+// Usage:
+//   Demonstrates multi-document ACID transactions using MongoDB replica set session transactions,
+//   verifying commit and rollback behavior.
 package main
 
 import (
@@ -9,6 +15,16 @@ import (
 )
 
 // RunMongoTransactionDemo demonstrates MongoDB multi-document session transactions.
+//
+// Purpose:
+//   Demonstrates atomic document creation inside a MongoDB session transaction, verifying
+//   both successful commit and abort/rollback upon error.
+//
+// Where it is used:
+//   - In MongoDB example demonstration suite.
+//
+// When can it be used:
+//   - When executing multiple related document mutations requiring atomic session transaction guarantees.
 func RunMongoTransactionDemo(ctx context.Context, engine *project.Engine) error {
 	fmt.Println("\n--- [MongoDB: Multi-Document Transaction Demo] ---")
 

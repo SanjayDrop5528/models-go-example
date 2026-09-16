@@ -1,3 +1,9 @@
+// Package main demonstrates runnable PostgreSQL integration workflows.
+//
+// File: server.go
+// Usage:
+//   Interactive HTTP REST API and Swagger UI server exposing PostgreSQL ModelConfig,
+//   DataModel, schema migrations, CRUD, query builder, and validation endpoints.
 package main
 
 import (
@@ -20,6 +26,15 @@ import (
 )
 
 // StartSwaggerServer starts an HTTP REST API server with interactive Swagger UI.
+//
+// Purpose:
+//   Sets up HTTP route multiplexing for Swagger UI documentation and dynamic API dispatch.
+//
+// Where it is used:
+//   - In examples/postgres_example/main.go.
+//
+// When can it be used:
+//   - When launching the interactive testing server for PostgreSQL.
 func StartSwaggerServer(port string, engine *project.Engine) *http.Server {
 	ctx := context.Background()
 	if engine != nil {
@@ -32,6 +47,13 @@ func StartSwaggerServer(port string, engine *project.Engine) *http.Server {
 
 	mux := http.NewServeMux()
 
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/" {
+			http.Redirect(w, r, "/swagger/", http.StatusFound)
+			return
+		}
+	})
+
 	mux.HandleFunc("/swagger/doc.json", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -41,18 +63,14 @@ func StartSwaggerServer(port string, engine *project.Engine) *http.Server {
 	mux.HandleFunc("/swagger/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(renderSwaggerUIHTML("PostgreSQL Adapter API - Swagger UI", "/swagger/doc.json")))
+		_, _ = w.Write([]byte(renderSwaggerUIHTML("PostgreSQL Adapter - Swagger UI", "/swagger/doc.json")))
 	})
 
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/" {
-			http.Redirect(w, r, "/swagger/", http.StatusFound)
-			return
-		}
+	mux.HandleFunc("/api/", func(w http.ResponseWriter, r *http.Request) {
 		handlePostgresAPI(w, r, engine)
 	})
 
-	server := &http.Server{
+	srv := &http.Server{
 		Addr:    ":" + port,
 		Handler: mux,
 	}
@@ -60,7 +78,7 @@ func StartSwaggerServer(port string, engine *project.Engine) *http.Server {
 	log.Printf("🚀 PostgreSQL Example Server running at http://localhost:%s", port)
 	log.Printf("📖 Interactive Swagger UI available at http://localhost:%s/swagger/", port)
 
-	return server
+	return srv
 }
 
 func handlePostgresAPI(w http.ResponseWriter, r *http.Request, engine *project.Engine) {
@@ -834,6 +852,16 @@ func handlePostgresAPI(w http.ResponseWriter, r *http.Request, engine *project.E
 	httpError(w, http.StatusNotFound, fmt.Errorf("route '%s' not found", r.URL.Path))
 }
 
+// httpError serializes an error into a JSON error response payload.
+//
+// Purpose:
+//   Writes an HTTP error status code and JSON body containing error details and validation error breakdowns.
+//
+// Where it is used:
+//   - In handlePostgresAPI for API error responses.
+//
+// When can it be used:
+//   - When writing standardized JSON error payloads.
 func httpError(w http.ResponseWriter, code int, err error) {
 	w.WriteHeader(code)
 	resp := map[string]any{
@@ -849,6 +877,16 @@ func httpError(w http.ResponseWriter, code int, err error) {
 	_ = json.NewEncoder(w).Encode(resp)
 }
 
+// renderSwaggerUIHTML generates the standalone Swagger UI HTML document.
+//
+// Purpose:
+//   Injects the page title and OpenAPI JSON spec URL into an HTML page with SwaggerUIBundle.
+//
+// Where it is used:
+//   - In StartSwaggerServer GET /swagger/ handler.
+//
+// When can it be used:
+//   - When rendering the Swagger interactive documentation page.
 func renderSwaggerUIHTML(title, docURL string) string {
 	return fmt.Sprintf(`<!DOCTYPE html>
 <html lang="en">
@@ -886,6 +924,16 @@ func renderSwaggerUIHTML(title, docURL string) string {
 </html>`, title, docURL)
 }
 
+// getPostgresOpenAPISpec returns the embedded OpenAPI 3.0 specification for PostgreSQL APIs.
+//
+// Purpose:
+//   Provides the full JSON OpenAPI specification detailing routes, request schemas, and responses.
+//
+// Where it is used:
+//   - In StartSwaggerServer GET /swagger/doc.json handler.
+//
+// When can it be used:
+//   - When serving the OpenAPI spec to Swagger UI or API documentation tools.
 func getPostgresOpenAPISpec() string {
 	return `{
   "openapi": "3.0.0",

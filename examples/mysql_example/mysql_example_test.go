@@ -1,3 +1,8 @@
+// Package main provides automated integration and smoke tests for the MySQL example.
+//
+// File: mysql_example_test.go
+// Usage:
+//   Validates the MySQL demo execution pipeline and Swagger HTTP REST API endpoints.
 package main
 
 import (
@@ -8,10 +13,30 @@ import (
 	"testing"
 )
 
+// TestMySQLExample executes the full suite of MySQL demonstrations.
+//
+// Purpose:
+//   Ensures the MySQL CRUD, stored procedures, queries, and transactions run cleanly.
+//
+// Where it is used:
+//   - In Go test runs for the MySQL example package.
+//
+// When can it be used:
+//   - During continuous integration and local testing.
 func TestMySQLExample(t *testing.T) {
 	RunMySQLExample()
 }
 
+// TestMySQLSwaggerEndpoints validates HTTP response status codes for the MySQL Swagger server.
+//
+// Purpose:
+//   Tests endpoints for Swagger UI HTML, OpenAPI JSON documentation, and seed routines.
+//
+// Where it is used:
+//   - In Go test runs for the MySQL example package.
+//
+// When can it be used:
+//   - When verifying MySQL HTTP API server routes and schema seed operations.
 func TestMySQLSwaggerEndpoints(t *testing.T) {
 	mysqlAdapter := mysql.NewMySQLAdapter("")
 	proj, err := project.NewProject(project.ProjectConfig{

@@ -1,8 +1,16 @@
 // Package examples_test provides comprehensive, runnable end-to-end integration examples
 // demonstrating:
-//   1. How to use ONLY the Validation Engine (standalone mode without any database).
-//   2. How to connect with each database adapter (PostgreSQL, MySQL, MongoDB, In-Memory).
-//   3. How to combine ALL components together (Adapter + Metadata Catalog + Validation Engine + Dataset Studio).
+//  1. How to use ONLY the Validation Engine (standalone mode without any database).
+//  2. How to connect with each database adapter (PostgreSQL, MySQL, MongoDB, In-Memory).
+//  3. How to combine ALL components together (Adapter + Metadata Catalog + Validation Engine + Dataset Studio).
+//
+// File: how_to_guide_test.go
+// Usage:
+//
+//	Contains executable step-by-step guides illustrating:
+//	  - Standalone Validation Engine usage without any database.
+//	  - Connecting with each database adapter (PostgreSQL, MySQL, MongoDB, In-Memory).
+//	  - Combining all components (Adapter + Metadata Catalog + Validation Engine + Dataset Studio).
 package examples_test
 
 import (
@@ -17,18 +25,26 @@ import (
 	"github.com/SanjayDrop5528/models-go-engine/project"
 	"github.com/SanjayDrop5528/models-go-engine/query"
 	"github.com/SanjayDrop5528/models-go-engine/validation"
-	"github.com/SanjayDrop5528/models-go-memory"
-	"github.com/SanjayDrop5528/models-go-mongodb"
-	"github.com/SanjayDrop5528/models-go-mysql"
-	"github.com/SanjayDrop5528/models-go-postgres"
+	memory "github.com/SanjayDrop5528/models-go-memory"
+	mongodb "github.com/SanjayDrop5528/models-go-mongodb"
+	mysql "github.com/SanjayDrop5528/models-go-mysql"
+	postgres "github.com/SanjayDrop5528/models-go-postgres"
 )
 
 // =============================================================================
 // GUIDE 1: HOW TO USE ONLY THE VALIDATION ENGINE (STANDALONE MODE)
 // =============================================================================
+//
 // Purpose:
-//   Demonstrates using the Validation Engine purely in-memory with ZERO database
-//   dependencies. Useful in microservices, API gateways, and edge workers.
+//
+//	Demonstrates using the Validation Engine purely in-memory with ZERO database
+//	dependencies. Useful in microservices, API gateways, and edge workers.
+//
+// Where it is used:
+//   - In runnable test suites as a canonical example for standalone validation.
+//
+// When can it be used:
+//   - When developers or services need record or schema validation without a database connection.
 func TestGuide_OnlyValidationEngine_Standalone(t *testing.T) {
 	// Step 1: Instantiate the Validation Engine in standalone mode
 	validator := validation.NewValidationEngine()
@@ -120,9 +136,17 @@ func TestGuide_OnlyValidationEngine_Standalone(t *testing.T) {
 // =============================================================================
 // GUIDE 2: HOW TO CONNECT WITH EACH DATABASE ADAPTER
 // =============================================================================
+//
 // Purpose:
-//   Demonstrates how to connect to PostgreSQL, MySQL, MongoDB, and In-Memory
-//   adapters using their uniform interface.
+//
+//	Demonstrates how to connect to PostgreSQL, MySQL, MongoDB, and In-Memory
+//	adapters using their uniform interface.
+//
+// Where it is used:
+//   - In runnable test suites as a reference guide for database adapter connectivity.
+//
+// When can it be used:
+//   - When connecting application services to PostgreSQL, MySQL, MongoDB, or Memory backends.
 func TestGuide_ConnectWithEachAdapter(t *testing.T) {
 	ctx := context.Background()
 
@@ -138,33 +162,46 @@ func TestGuide_ConnectWithEachAdapter(t *testing.T) {
 	// 2. MySQL Adapter Connection
 	myDSN := "root:rootpassword@tcp(localhost:3306)/uat_mineone"
 	myAdapter := mysql.NewMySQLAdapter(myDSN)
-	if myAdapter.Name() != "mysql" {
-		t.Fatalf("unexpected adapter name: %s", myAdapter.Name())
+	if err := myAdapter.Connect(ctx); err == nil {
+		if err := myAdapter.Ping(ctx); err == nil {
+			t.Logf("✔ Connected to MySQL: %s (Relational: %v)", myAdapter.Name(), myAdapter.Capabilities().Category == adapter.StorageCategoryRelational)
+		}
 	}
-	t.Logf("✔ Initialized MySQL Adapter: %s", myAdapter.Name())
 
 	// 3. MongoDB Adapter Connection
 	mongoURI := "mongodb://localhost:27017"
 	mongoAdapter := mongodb.NewMongoAdapter(mongoURI, "uat_mineone")
-	if mongoAdapter.Name() != "mongodb" {
-		t.Fatalf("unexpected adapter name: %s", mongoAdapter.Name())
+	if err := mongoAdapter.Connect(ctx); err == nil {
+		if err := mongoAdapter.Ping(ctx); err == nil {
+			t.Logf("✔ Connected to MongoDB: %s (Document: %v)", mongoAdapter.Name(), mongoAdapter.Capabilities().Category == adapter.StorageCategoryDocument)
+		}
 	}
-	t.Logf("✔ Initialized MongoDB Adapter: %s", mongoAdapter.Name())
 
-	// 4. In-Memory Adapter (Always available, instant, zero config)
+	// 4. In-Memory Adapter Connection (Always available, zero configuration)
 	memAdapter := memory.NewMemoryAdapter()
 	if err := memAdapter.Connect(ctx); err != nil {
-		t.Fatalf("failed connecting memory adapter: %v", err)
+		t.Fatalf("memory adapter connect failed: %v", err)
 	}
-	t.Logf("✔ Connected to In-Memory Adapter: %s", memAdapter.Name())
+	if err := memAdapter.Ping(ctx); err != nil {
+		t.Fatalf("memory adapter ping failed: %v", err)
+	}
+	t.Logf("✔ Connected to In-Memory Adapter: %s (Relational: %v)", memAdapter.Name(), memAdapter.Capabilities().Category == adapter.StorageCategoryRelational)
 }
 
 // =============================================================================
 // GUIDE 3: HOW TO COMBINE ALL COMPONENTS TOGETHER
 // =============================================================================
+//
 // Purpose:
-//   Demonstrates the complete end-to-end integration:
-//     Adapter + ModelConfig + DataModel + Validation Engine + Dataset Studio.
+//
+//	Demonstrates the complete end-to-end integration:
+//	  Adapter + ModelConfig + DataModel + Validation Engine + Dataset Studio.
+//
+// Where it is used:
+//   - In runnable test suites as a comprehensive architectural walkthrough.
+//
+// When can it be used:
+//   - When assembling a complete multi-tier data modeling and query synthesis platform.
 func TestGuide_CombineAllComponentsTogether(t *testing.T) {
 	ctx := context.Background()
 

@@ -1,3 +1,9 @@
+// Package main demonstrates dynamic document CRUD operations using MongoDB.
+//
+// File: crud.go
+// Usage:
+//   Demonstrates document insertion, finding by ID, dynamic filtering via AST,
+//   partial patching ($set), complete document replacement, and deletion in MongoDB.
 package main
 
 import (
@@ -10,6 +16,16 @@ import (
 )
 
 // RunMongoCRUDDemo demonstrates dynamic document CRUD operations with MongoDB.
+//
+// Purpose:
+//   Registers a product model, validates schema compilation, and executes document
+//   create, read, AST search, patch, update, and delete lifecycle actions.
+//
+// Where it is used:
+//   - In MongoDB example main suite and automated test runs.
+//
+// When can it be used:
+//   - When demonstrating dynamic document lifecycle operations against a MongoDB database.
 func RunMongoCRUDDemo(ctx context.Context, engine *project.Engine) error {
 	fmt.Println("\n--- [MongoDB: Document CRUD Operations Demo] ---")
 

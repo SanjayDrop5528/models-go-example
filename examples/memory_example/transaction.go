@@ -1,3 +1,9 @@
+// Package main demonstrates transactional unit-of-work in the in-memory adapter.
+//
+// File: transaction.go
+// Usage:
+//   Demonstrates transactional staging, atomic commit, and rollback capabilities
+//   in the memory adapter.
 package main
 
 import (
@@ -9,6 +15,15 @@ import (
 )
 
 // RunMemoryTransactionDemo demonstrates atomic transaction staging, commit, and rollback in memory.
+//
+// Purpose:
+//   Executes multiple staged writes within an in-memory transaction, verifying success commit and error rollback.
+//
+// Where it is used:
+//   - In Memory example demonstration runner.
+//
+// When can it be used:
+//   - When demonstrating unit-of-work semantics for ephemeral in-memory tests or sessions.
 func RunMemoryTransactionDemo(ctx context.Context, engine *project.Engine) error {
 	fmt.Println("\n--- [Memory Adapter: Atomic Transaction Demo] ---")
 

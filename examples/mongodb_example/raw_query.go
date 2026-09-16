@@ -1,3 +1,9 @@
+// Package main demonstrates raw MongoDB commands and dynamic AST querying.
+//
+// File: raw_query.go
+// Usage:
+//   Demonstrates raw administrative MongoDB commands (such as ping) and AST-driven
+//   queries with filters, sorting, and pagination against document collections.
 package main
 
 import (
@@ -8,6 +14,15 @@ import (
 )
 
 // RunMongoRawQueryDemo demonstrates MongoDB commands (db.runCommand) and dynamic AST querying.
+//
+// Purpose:
+//   Executes a raw MongoDB database command and runs a dynamic AST query with comparison operators and pagination.
+//
+// Where it is used:
+//   - In MongoDB example demonstration suite.
+//
+// When can it be used:
+//   - When demonstrating low-level command execution or dynamic AST filtering on MongoDB collections.
 func RunMongoRawQueryDemo(ctx context.Context, engine *project.Engine) error {
 	fmt.Println("\n--- [MongoDB: Raw Command & Advanced Query Demo] ---")
 

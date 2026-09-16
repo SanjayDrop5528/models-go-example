@@ -1,3 +1,9 @@
+// Package main demonstrates runnable MySQL integration workflows.
+//
+// File: function.go
+// Usage:
+//   Demonstrates MySQL custom function registration, parameter validation,
+//   and generic invocation generating SELECT function() statements.
 package main
 
 import (
@@ -9,6 +15,15 @@ import (
 )
 
 // RunMySQLFunctionDemo demonstrates MySQL custom function registration and execution.
+//
+// Purpose:
+//   Registers custom function metadata and calls the MySQL stored function via project.Engine.
+//
+// Where it is used:
+//   - In examples/mysql_example/main.go.
+//
+// When can it be used:
+//   - When calling or verifying custom functions on MySQL databases.
 func RunMySQLFunctionDemo(ctx context.Context, engine *project.Engine) error {
 	fmt.Println("\n--- [MySQL: Custom Function Demo] ---")
 

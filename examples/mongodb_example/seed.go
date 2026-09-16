@@ -1,3 +1,9 @@
+// Package main provides enterprise schema seeding and demo document initialization for MongoDB.
+//
+// File: seed.go
+// Usage:
+//   Registers enterprise multi-schema ModelConfig and DataModel metadata across 6 domain schemas,
+//   compiles MongoDB $jsonSchema validators, and populates sample document records.
 package main
 
 import (
@@ -9,14 +15,54 @@ import (
 	"github.com/SanjayDrop5528/models-go-engine/service"
 )
 
-// helper pointers
+// strPtr returns a pointer to the passed string value.
+//
+// Purpose:
+//   Convenience constructor for optional string pointer fields.
+//
+// Where it is used:
+//   - Throughout field and validation definitions in seed.go.
+//
+// When can it be used:
+//   - When assigning literal string addresses to pointer fields.
 func strPtr(s string) *string  { return &s }
+
+// intPtr returns a pointer to the passed integer value.
+//
+// Purpose:
+//   Convenience constructor for optional integer pointer fields.
+//
+// Where it is used:
+//   - Throughout field and validation definitions in seed.go.
+//
+// When can it be used:
+//   - When assigning literal int addresses to pointer fields.
 func intPtr(i int) *int        { return &i }
+
+// f64Ptr returns a pointer to the passed float64 value.
+//
+// Purpose:
+//   Convenience constructor for optional float64 pointer fields.
+//
+// Where it is used:
+//   - Throughout field and validation definitions in seed.go.
+//
+// When can it be used:
+//   - When assigning literal float64 addresses to pointer fields.
 func f64Ptr(f float64) *float64 { return &f }
 
 // SeedMongoModelConfigs seeds ModelConfig definitions across 6 domain schemas:
 // company, hr, projects, finance, operations, audit.
 // Idempotent: creates if not existing or updates if already existing.
+//
+// Purpose:
+//   Registers all 10 enterprise domain ModelConfig structures across 6 schemas into MongoDB metadata store.
+//
+// Where it is used:
+//   - In SeedEnterpriseMongoSchema and /api/seed/model-configs endpoint.
+//
+// When can it be used:
+//   - During initial MongoDB setup or metadata synchronization.
 func SeedMongoModelConfigs(ctx context.Context, engine *project.Engine) ([]*model.ModelConfig, error) {
 	log.Println("[SEED] [ModelConfig] >>> Starting ModelConfig Seeding & Mapping (6 schemas)...")
 
@@ -162,6 +208,15 @@ func SeedMongoModelConfigs(ctx context.Context, engine *project.Engine) ([]*mode
 // Covers all validation types: STRING min/max/pattern/enum, INT min/max, LONG, DECIMAL precision/scale,
 // FLOAT min/max, BOOLEAN default, DATE, DATETIME, UUID pattern, ARRAY, JSON custom type,
 // orbital references (exists, exists_active), and cross-schema references.
+//
+// Purpose:
+//   Registers all field constraints, validates orbital relationships, and applies $jsonSchema validators to MongoDB collections.
+//
+// Where it is used:
+//   - In SeedEnterpriseMongoSchema and /api/seed/data-models endpoint.
+//
+// When can it be used:
+//   - When compiling and enforcing document structure and validation rules in MongoDB.
 func SeedMongoDataModels(ctx context.Context, engine *project.Engine) (map[string][]*model.DataModel, error) {
 	log.Println("[SEED] [DataModel] >>> Starting DataModel Field Seeding & Mapping (6 schemas)...")
 
@@ -647,6 +702,15 @@ func SeedMongoDataModels(ctx context.Context, engine *project.Engine) (map[strin
 }
 
 // SeedMongoSampleData inserts representative sample documents across all 10 collections.
+//
+// Purpose:
+//   Populates initial sample documents across all 10 enterprise collections.
+//
+// Where it is used:
+//   - In SeedEnterpriseMongoSchema and /api/seed/data endpoint.
+//
+// When can it be used:
+//   - When populating test documents after schema application.
 func SeedMongoSampleData(ctx context.Context, engine *project.Engine) (map[string]any, error) {
 	log.Println("[SEED] [SampleData] >>> Starting Sample Documents Seeding (6 schemas / 10 collections)...")
 
@@ -839,6 +903,15 @@ func SeedMongoSampleData(ctx context.Context, engine *project.Engine) (map[strin
 
 // SeedEnterpriseMongoSchema executes the full seeding pipeline:
 // ModelConfigs → DataModels (schema compilation) → Sample Documents.
+//
+// Purpose:
+//   Orchestrates the entire multi-schema seeding pipeline for MongoDB.
+//
+// Where it is used:
+//   - In MongoDB example runner and /api/seed master endpoint.
+//
+// When can it be used:
+//   - When performing a complete one-step initialization of the MongoDB demo environment.
 func SeedEnterpriseMongoSchema(ctx context.Context, engine *project.Engine) (map[string]any, error) {
 	log.Println("[SEED] =============================================================")
 	log.Println("[SEED] Starting Full Enterprise MongoDB Schema Seeding Pipeline")

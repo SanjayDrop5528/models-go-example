@@ -1,6 +1,11 @@
 // Package main demonstrates complete MongoDB adapter capabilities:
 // Dynamic $jsonSchema Validation, Flexible Document CRUD, Custom Commands & Compatibility Guards,
 // Dynamic Query AST, Multi-Document Transactions, and Interactive Swagger UI.
+//
+// File: main.go
+// Usage:
+//   Serves as the entry point for the MongoDB example, executing the comprehensive
+//   suite of demonstrations and optionally starting the HTTP Swagger UI server.
 package main
 
 import (
@@ -11,11 +16,31 @@ import (
 	"os"
 )
 
+// main is the CLI entrypoint for running the MongoDB demonstration suite.
+//
+// Purpose:
+//   Invokes the complete set of MongoDB adapter demonstrations.
+//
+// Where it is used:
+//   - When executing `go run main.go` or launching the binary.
+//
+// When can it be used:
+//   - At application startup for demonstration or standalone server operation.
 func main() {
 	RunMongoDBExample()
 }
 
 // RunMongoDBExample runs the complete suite of MongoDB adapter demos and can launch the Swagger UI server.
+//
+// Purpose:
+//   Initializes the MongoDB adapter and engine, executes CRUD, compatibility, pipeline,
+//   raw command, and transaction demos, and starts the Swagger HTTP server if requested.
+//
+// Where it is used:
+//   - Called by main() and automated integration test runners.
+//
+// When can it be used:
+//   - When verifying end-to-end MongoDB engine integration or launching the example server.
 func RunMongoDBExample() {
 	ctx := context.Background()
 	fmt.Println("=========================================================")

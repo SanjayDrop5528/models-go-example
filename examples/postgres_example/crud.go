@@ -1,3 +1,9 @@
+// Package main demonstrates runnable PostgreSQL integration workflows.
+//
+// File: crud.go
+// Usage:
+//   Demonstrates dynamic CRUD operations (Create, FindOne, Find with filters/pagination,
+//   Patch, Update, Delete) against PostgreSQL using project.Engine.
 package main
 
 import (
@@ -10,6 +16,16 @@ import (
 )
 
 // RunPostgresCRUDDemo demonstrates complete dynamic CRUD operations with PostgreSQL.
+//
+// Purpose:
+//   Walks through defining a model, applying schema migration, and executing Create, FindOne,
+//   Find query filtering, Patch, Update, and Delete operations on PostgreSQL.
+//
+// Where it is used:
+//   - In examples/postgres_example/main.go.
+//
+// When can it be used:
+//   - When executing or testing complete dynamic CRUD operations on PostgreSQL.
 func RunPostgresCRUDDemo(ctx context.Context, engine *project.Engine) error {
 	fmt.Println("\n--- [PostgreSQL: CRUD Operations Demo] ---")
 

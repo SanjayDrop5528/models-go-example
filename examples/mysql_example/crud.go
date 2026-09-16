@@ -1,3 +1,9 @@
+// Package main demonstrates runnable MySQL integration workflows.
+//
+// File: crud.go
+// Usage:
+//   Demonstrates dynamic CRUD operations (Create, FindOne, Find with filters/pagination,
+//   Patch, Update, Delete) against MySQL using project.Engine.
 package main
 
 import (
@@ -10,6 +16,16 @@ import (
 )
 
 // RunMySQLCRUDDemo demonstrates complete dynamic CRUD operations with MySQL.
+//
+// Purpose:
+//   Walks through defining an order model, applying schema migration, and executing Create, FindOne,
+//   filtering queries, Patch, Update, and Delete operations on MySQL.
+//
+// Where it is used:
+//   - In examples/mysql_example/main.go.
+//
+// When can it be used:
+//   - When verifying dynamic record operations against MySQL.
 func RunMySQLCRUDDemo(ctx context.Context, engine *project.Engine) error {
 	fmt.Println("\n--- [MySQL: CRUD Operations Demo] ---")
 

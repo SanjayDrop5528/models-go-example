@@ -1,3 +1,9 @@
+// Package main illustrates MySQL adapter stored procedure invocation and registration.
+//
+// File: procedure.go
+// Usage:
+//   Provides demonstrations for defining, registering, and executing stored
+//   procedures against a live or connected MySQL database instance using the engine.
 package main
 
 import (
@@ -9,6 +15,16 @@ import (
 )
 
 // RunMySQLProcedureDemo demonstrates MySQL stored procedure registration, calling, and execution.
+//
+// Purpose:
+//   Registers a stored procedure configuration with typed parameters and executes it
+//   against the MySQL backend, reporting execution status and metadata.
+//
+// Where it is used:
+//   - In MySQL example entry points and CLI demonstrations.
+//
+// When can it be used:
+//   - When demonstrating or testing MySQL stored procedure invocation with input parameters.
 func RunMySQLProcedureDemo(ctx context.Context, engine *project.Engine) error {
 	fmt.Println("\n--- [MySQL: Stored Procedure Demo] ---")
 

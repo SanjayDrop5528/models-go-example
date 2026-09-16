@@ -1,3 +1,9 @@
+// Package main provides automated integration and capability tests for the PostgreSQL example.
+//
+// File: postgres_example_test.go
+// Usage:
+//   Executes tests across PostgreSQL Swagger endpoints, live dataset queries,
+//   validation sub-groups, Bun-style relational joins, and custom functions.
 package main
 
 import (
@@ -17,11 +23,31 @@ import (
 	postgres "github.com/SanjayDrop5528/models-go-postgres"
 )
 
+// TestPostgresExample runs the main PostgreSQL demonstration workflow.
+//
+// Purpose:
+//   Verifies that the complete PostgreSQL demo suite executes without runtime errors or panics.
+//
+// Where it is used:
+//   - In PostgreSQL example test suite runs.
+//
+// When can it be used:
+//   - When executing automated smoke tests for the PostgreSQL example.
 func TestPostgresExample(t *testing.T) {
 	// Execute the example runner to ensure no panics/errors
 	RunPostgresExample()
 }
 
+// TestPostgresSwaggerEndpoints tests Swagger UI, OpenAPI spec, and seed HTTP routes.
+//
+// Purpose:
+//   Validates HTTP responses for Swagger UI documentation and seed endpoints.
+//
+// Where it is used:
+//   - In PostgreSQL example test suite.
+//
+// When can it be used:
+//   - When testing the PostgreSQL REST API router and documentation assets.
 func TestPostgresSwaggerEndpoints(t *testing.T) {
 	pgAdapter := postgres.NewPostgresAdapter("")
 	proj, err := project.NewProject(project.ProjectConfig{
@@ -70,6 +96,16 @@ func TestPostgresSwaggerEndpoints(t *testing.T) {
 	}
 }
 
+// TestPostgres_Dataset_EndToEnd tests dataset compilation, execution, and CRUD lifecycle in PostgreSQL.
+//
+// Purpose:
+//   Tests creation, retrieval, execution, parameter binding, and deletion of SQL datasets.
+//
+// Where it is used:
+//   - In PostgreSQL example test suite.
+//
+// When can it be used:
+//   - When verifying end-to-end dataset services on top of PostgreSQL.
 func TestPostgres_Dataset_EndToEnd(t *testing.T) {
 	pgAdapter := postgres.NewPostgresAdapter("")
 	proj, err := project.NewProject(project.ProjectConfig{
@@ -274,6 +310,16 @@ func TestPostgres_Dataset_EndToEnd(t *testing.T) {
 	}
 }
 
+// TestPostgres_ModelConfigAndDataModel_Smoke tests ModelConfig and DataModel registration via HTTP.
+//
+// Purpose:
+//   Validates model configuration and field mapping lifecycle via HTTP REST routes.
+//
+// Where it is used:
+//   - In PostgreSQL example test suite.
+//
+// When can it be used:
+//   - When verifying model metadata CRUD operations against the PostgreSQL server.
 func TestPostgres_ModelConfigAndDataModel_Smoke(t *testing.T) {
 	pgAdapter := postgres.NewPostgresAdapter("")
 	proj, err := project.NewProject(project.ProjectConfig{
@@ -372,6 +418,16 @@ func TestPostgres_ModelConfigAndDataModel_Smoke(t *testing.T) {
 	}
 }
 
+// TestPostgres_Validation_AllEndpoints validates all validation endpoints and constraint categories.
+//
+// Purpose:
+//   Tests models, data constraints, custom types, orbital references, and plan safety validations.
+//
+// Where it is used:
+//   - In PostgreSQL example test suite.
+//
+// When can it be used:
+//   - When verifying validation engine endpoints in the PostgreSQL example server.
 func TestPostgres_Validation_AllEndpoints(t *testing.T) {
 	pgAdapter := postgres.NewPostgresAdapter("")
 	proj, err := project.NewProject(project.ProjectConfig{
@@ -511,6 +567,16 @@ func TestPostgres_Validation_AllEndpoints(t *testing.T) {
 	}
 }
 
+// TestPostgres_BunStyleRelations_EndToEnd tests Bun-style relational loading and nested relations.
+//
+// Purpose:
+//   Tests belongs-to, has-one, has-many, and many-to-many relationship queries with live database joins.
+//
+// Where it is used:
+//   - In PostgreSQL example integration test suite.
+//
+// When can it be used:
+//   - When validating relational query loading against a live PostgreSQL database.
 func TestPostgres_BunStyleRelations_EndToEnd(t *testing.T) {
 	ctx := context.Background()
 
@@ -803,6 +869,16 @@ func TestPostgres_BunStyleRelations_EndToEnd(t *testing.T) {
 	}
 }
 
+// TestPostgres_Dataset_LiveExecution_CustomAndAggregateFunctions tests dataset live query execution with aggregates.
+//
+// Purpose:
+//   Tests compilation and live execution of dataset queries containing expressions, joins, and aggregates.
+//
+// Where it is used:
+//   - In PostgreSQL example integration test suite.
+//
+// When can it be used:
+//   - When verifying live dataset SQL compilation and result projection.
 func TestPostgres_Dataset_LiveExecution_CustomAndAggregateFunctions(t *testing.T) {
 	ctx := context.Background()
 

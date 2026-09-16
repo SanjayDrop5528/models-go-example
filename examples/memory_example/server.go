@@ -1,3 +1,9 @@
+// Package main provides the HTTP REST server and Swagger UI documentation for the in-memory adapter.
+//
+// File: server.go
+// Usage:
+//   Initializes an HTTP server exposing dynamic model configuration endpoints, schema validation preview/apply,
+//   CRUD operations, in-memory function/procedure execution, and interactive Swagger UI documentation.
 package main
 
 import (
@@ -17,6 +23,15 @@ import (
 )
 
 // StartSwaggerServer starts a Memory REST API server with interactive Swagger UI.
+//
+// Purpose:
+//   Configures the HTTP server routing, endpoints, and Swagger UI documentation on the designated port.
+//
+// Where it is used:
+//   - In RunMemoryExample when server mode is specified.
+//
+// When can it be used:
+//   - When serving the in-memory adapter capabilities over an interactive HTTP interface.
 func StartSwaggerServer(port string, engine *project.Engine) *http.Server {
 	mux := http.NewServeMux()
 
@@ -51,6 +66,16 @@ func StartSwaggerServer(port string, engine *project.Engine) *http.Server {
 	return server
 }
 
+// handleMemoryAPI dispatches incoming HTTP API requests for the in-memory engine.
+//
+// Purpose:
+//   Routes validation, seeding, models, fields, schema diffs, data CRUD, operations, and transactions.
+//
+// Where it is used:
+//   - Bound as HTTP handler in StartSwaggerServer.
+//
+// When can it be used:
+//   - For handling all client HTTP requests directed to /api/... routes.
 func handleMemoryAPI(w http.ResponseWriter, r *http.Request, engine *project.Engine) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -584,6 +609,16 @@ func handleMemoryAPI(w http.ResponseWriter, r *http.Request, engine *project.Eng
 	httpError(w, http.StatusNotFound, fmt.Errorf("route '%s' not found", r.URL.Path))
 }
 
+// httpError serializes error payloads into standard JSON responses with HTTP status codes.
+//
+// Purpose:
+//   Extracts validation and internal error descriptions and formats them into structured JSON error payloads.
+//
+// Where it is used:
+//   - In handleMemoryAPI error response branches.
+//
+// When can it be used:
+//   - Whenever an HTTP request fails validation or internal processing.
 func httpError(w http.ResponseWriter, code int, err error) {
 	w.WriteHeader(code)
 	resp := map[string]any{
@@ -599,6 +634,16 @@ func httpError(w http.ResponseWriter, code int, err error) {
 	_ = json.NewEncoder(w).Encode(resp)
 }
 
+// renderSwaggerUIHTML builds the HTML hosting the Swagger UI bundle for the memory adapter.
+//
+// Purpose:
+//   Constructs the Swagger UI interface HTML referencing the memory OpenAPI spec document.
+//
+// Where it is used:
+//   - In the /swagger/ route handler of StartSwaggerServer.
+//
+// When can it be used:
+//   - When users browse to /swagger/ in a web browser.
 func renderSwaggerUIHTML(title, docURL string) string {
 	return fmt.Sprintf(`<!DOCTYPE html>
 <html lang="en">
@@ -636,6 +681,16 @@ func renderSwaggerUIHTML(title, docURL string) string {
 </html>`, title, docURL)
 }
 
+// getMemoryOpenAPISpec returns the OpenAPI 3.0 specification JSON string for the in-memory API.
+//
+// Purpose:
+//   Defines endpoints, parameter schemas, and payload examples for testing in-memory features.
+//
+// Where it is used:
+//   - In the /swagger/doc.json endpoint of StartSwaggerServer.
+//
+// When can it be used:
+//   - When Swagger UI or clients request OpenAPI documentation for the memory adapter.
 func getMemoryOpenAPISpec() string {
 	return `{
   "openapi": "3.0.0",

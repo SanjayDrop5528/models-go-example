@@ -1,3 +1,9 @@
+// Package main demonstrates runnable PostgreSQL integration workflows.
+//
+// File: raw_query.go
+// Usage:
+//   Demonstrates direct execution of raw SQL commands (DDL, administrative statements)
+//   and advanced multi-condition query AST execution on PostgreSQL.
 package main
 
 import (
@@ -9,6 +15,15 @@ import (
 )
 
 // RunPostgresRawQueryDemo demonstrates raw SQL commands and advanced dynamic query AST execution.
+//
+// Purpose:
+//   Executes custom administrative SQL statements and evaluates complex multi-predicate queries via project.Engine.
+//
+// Where it is used:
+//   - In examples/postgres_example/main.go.
+//
+// When can it be used:
+//   - When running native database management commands or testing complex query filters.
 func RunPostgresRawQueryDemo(ctx context.Context, engine *project.Engine) error {
 	fmt.Println("\n--- [PostgreSQL: Raw Query & Advanced AST Demo] ---")
 

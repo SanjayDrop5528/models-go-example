@@ -1,6 +1,10 @@
 // Package main demonstrates complete MySQL adapter capabilities:
 // Dynamic Model Schema Migrations, Dynamic CRUD, Stored Functions, Stored Procedures,
 // Raw SQL Query AST, Atomic Multi-Model Transactions, and Interactive Swagger UI.
+//
+// File: main.go
+// Usage:
+//   CLI / demo entrypoint executing MySQL capability demonstrations and starting the Swagger API server.
 package main
 
 import (
@@ -11,11 +15,30 @@ import (
 	"os"
 )
 
+// main is the CLI entrypoint for MySQL examples.
+//
+// Purpose:
+//   Dispatches to RunMySQLExample to run demos and optional Swagger server.
+//
+// Where it is used:
+//   - When executing `go run ./examples/mysql_example/main.go`.
+//
+// When can it be used:
+//   - To run MySQL demonstrations locally.
 func main() {
 	RunMySQLExample()
 }
 
 // RunMySQLExample runs the complete suite of MySQL adapter demos and can launch the Swagger UI server.
+//
+// Purpose:
+//   Initializes MySQL adapter and engine, and conditionally launches the Swagger UI server.
+//
+// Where it is used:
+//   - Called by main() and integration test suites.
+//
+// When can it be used:
+//   - Whenever executing MySQL capability walkthroughs.
 func RunMySQLExample() {
 	ctx := context.Background()
 	fmt.Println("=========================================================")
