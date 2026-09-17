@@ -197,19 +197,24 @@ func handleMongoAPI(w http.ResponseWriter, r *http.Request, engine *project.Engi
 		parts := strings.Split(subPath, "/")
 		if len(parts) == 2 && parts[1] == "execute" && r.Method == http.MethodPost {
 			refName := parts[0]
-			var reqBody struct {
-				FilterParams map[string]any `json:"filterParams"`
-				UserToken    any            `json:"userToken,omitempty"`
+			var req domain.ExecuteRequest
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				httpError(w, http.StatusBadRequest, err)
+				return
 			}
-			_ = json.NewDecoder(r.Body).Decode(&reqBody)
-			rows, err := dataSetService.ExecuteWithUserToken(ctx, refName, reqBody.FilterParams, reqBody.UserToken)
+			rows, err := dataSetService.ExecuteWithOptions(ctx, refName, &req)
 			if err != nil {
 				httpError(w, http.StatusBadRequest, err)
 				return
 			}
 			_ = json.NewEncoder(w).Encode(map[string]any{
-				"response": rows,
-				"count":    len(rows),
+				"rows":         rows,
+				"response":     rows,
+				"count":        len(rows),
+				"total_rows":   len(rows),
+				"start":        req.Start,
+				"limit":        req.Limit,
+				"appendfilter": req.GetAppendFilter(),
 			})
 			return
 		}
