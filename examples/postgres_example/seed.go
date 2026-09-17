@@ -453,9 +453,15 @@ func DiscoverPostgresTables(ctx context.Context, engine *project.Engine, dbName,
 			}
 		}
 
+		modelName := fmt.Sprintf("%s.%s", t.Schema, t.Name)
+		if t.Schema == "" {
+			modelName = fmt.Sprintf("public.%s", t.Name)
+		}
+
 		results = append(results, map[string]any{
 			"table":        t.Name,
 			"schema":       t.Schema,
+			"model_name":   modelName,
 			"column_count": colCount,
 			"primary_key":  pkCol,
 			"database":     adapter.GetDatabaseName(),
@@ -519,7 +525,11 @@ func ImportPostgresCustomDatabase(ctx context.Context, engine *project.Engine, d
 	importedTableNames := make([]string, 0)
 
 	for _, cfg := range configs {
-		if len(selectedMap) > 0 && !selectedMap[strings.ToLower(cfg.Table)] && !selectedMap[strings.ToLower(cfg.ID)] {
+		if len(selectedMap) > 0 &&
+			!selectedMap[strings.ToLower(cfg.Table)] &&
+			!selectedMap[strings.ToLower(cfg.ID)] &&
+			!selectedMap[strings.ToLower(cfg.Name)] &&
+			!selectedMap[strings.ToLower(fmt.Sprintf("%s.%s", cfg.Schema, cfg.Table))] {
 			continue
 		}
 
@@ -539,7 +549,7 @@ func ImportPostgresCustomDatabase(ctx context.Context, engine *project.Engine, d
 		}
 		if err == nil && saved != nil {
 			importedConfigs = append(importedConfigs, saved)
-			importedTableNames = append(importedTableNames, saved.Table)
+			importedTableNames = append(importedTableNames, saved.Name)
 		}
 	}
 
