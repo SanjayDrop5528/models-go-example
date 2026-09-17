@@ -200,6 +200,7 @@ func SeedMemoryDataModels(ctx context.Context, engine *project.Engine) (map[stri
 				log.Printf("[SEED] [DataModel] Storing new field '%s.%s' (Type=%s)%s into memory 'data_models' store...", f.ModelID, f.ColumnName, f.DataType, refDetail)
 			} else {
 				log.Printf("[SEED] [DataModel] Updating field '%s.%s'%s in memory 'data_models' store...", f.ModelID, f.ColumnName, refDetail)
+				f.ID = existingField.ID
 			}
 
 			saved, saveErr := engine.AddDataModel(ctx, f)

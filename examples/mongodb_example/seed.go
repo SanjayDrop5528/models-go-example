@@ -678,6 +678,7 @@ func SeedMongoDataModels(ctx context.Context, engine *project.Engine) (map[strin
 				log.Printf("[SEED] [DataModel] Creating '%s.%s' (type=%s)%s...", f.ModelID, f.ColumnName, f.DataType, refDetail)
 			} else {
 				log.Printf("[SEED] [DataModel] Updating '%s.%s'%s...", f.ModelID, f.ColumnName, refDetail)
+				f.ID = existingField.ID
 			}
 
 			saved, saveErr := engine.AddDataModel(ctx, f)

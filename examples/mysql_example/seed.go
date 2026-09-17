@@ -203,6 +203,7 @@ func SeedMySQLDataModels(ctx context.Context, engine *project.Engine) (map[strin
 				log.Printf("[SEED] [DataModel] Storing new field '%s.%s' (Type=%s)%s into database 'data_models' table...", f.ModelID, f.ColumnName, f.DataType, refDetail)
 			} else {
 				log.Printf("[SEED] [DataModel] Updating field '%s.%s'%s in database 'data_models' table...", f.ModelID, f.ColumnName, refDetail)
+				f.ID = existingField.ID
 			}
 
 			saved, saveErr := engine.AddDataModel(ctx, f)

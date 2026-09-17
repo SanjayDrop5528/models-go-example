@@ -867,12 +867,43 @@ func handlePostgresAPI(w http.ResponseWriter, r *http.Request, engine *project.E
 //
 // When can it be used:
 //   - When writing standardized JSON error payloads.
+func extractSQLFromError(errMsg string) (cleanMsg string, sqlQuery string, tableName string) {
+	cleanMsg = errMsg
+	if idx := strings.Index(errMsg, "(SQL:"); idx != -1 {
+		sqlPart := errMsg[idx+5:]
+		sqlPart = strings.TrimSuffix(strings.TrimSpace(sqlPart), ")")
+		sqlQuery = strings.TrimSpace(sqlPart)
+		cleanMsg = strings.TrimSpace(errMsg[:idx])
+	} else if idx := strings.Index(errMsg, "SQL:"); idx != -1 {
+		sqlQuery = strings.TrimSpace(errMsg[idx+4:])
+		cleanMsg = strings.TrimSpace(errMsg[:idx])
+	}
+
+	if tIdx := strings.Index(cleanMsg, "for table '"); tIdx != -1 {
+		rest := cleanMsg[tIdx+11:]
+		if endQuote := strings.Index(rest, "'"); endQuote != -1 {
+			tableName = rest[:endQuote]
+		}
+	}
+	return
+}
+
 func httpError(w http.ResponseWriter, code int, err error) {
 	w.WriteHeader(code)
+	errMsg := err.Error()
+	cleanMsg, sqlQuery, tableName := extractSQLFromError(errMsg)
 	resp := map[string]any{
-		"error":   err.Error(),
+		"error":   errMsg,
+		"message": cleanMsg,
 		"status":  code,
 		"success": false,
+	}
+	if sqlQuery != "" {
+		resp["sql"] = sqlQuery
+		resp["query"] = sqlQuery
+	}
+	if tableName != "" {
+		resp["table"] = tableName
 	}
 	if me, ok := err.(*validation.MultiValidationError); ok {
 		resp["errors"] = me.Errors
