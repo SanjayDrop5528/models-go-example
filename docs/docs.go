@@ -59,6 +59,30 @@ const docTemplate = `{
                         "description": "Sort fields (e.g. name,-age)",
                         "name": "sort",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Orbital relations, comma-separated (e.g. Customer,OrderProducts)",
+                        "name": "relations",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Enable verbose runtime query logging",
+                        "name": "debug",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Include filter and bound values in debug logs (values are redacted by default)",
+                        "name": "debug_include_args",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Log a slow-query event when runtime reaches this duration",
+                        "name": "slow_query_threshold_ms",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -140,8 +164,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/query.PaginationRequest"
                         }
                     }
                 ],
@@ -180,6 +203,30 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Orbital relations, comma-separated (e.g. Customer,OrderProducts)",
+                        "name": "relations",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Enable verbose runtime query logging",
+                        "name": "debug",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Include filter and bound values in debug logs (values are redacted by default)",
+                        "name": "debug_include_args",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Log a slow-query event when runtime reaches this duration",
+                        "name": "slow_query_threshold_ms",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -386,6 +433,41 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/models/reinit": {
+            "post": {
+                "description": "Reconstruct and compile all or specified models from ModelConfig and DataModel metadata",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Models"
+                ],
+                "summary": "Re-initialize models",
+                "parameters": [
+                    {
+                        "description": "Optional Model IDs filter",
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/api/models/{model}": {
             "get": {
                 "description": "Get draft or active definition of a model by ID or name",
@@ -481,6 +563,215 @@ const docTemplate = `{
                         "type": "string",
                         "description": "Model ID",
                         "name": "model",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/models/{model}/fields": {
+            "get": {
+                "description": "Get all field definitions belonging to a model",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "DataModel"
+                ],
+                "summary": "List DataModel fields for a model",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Model ID",
+                        "name": "model",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Define a new column / JSON field for a model",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "DataModel"
+                ],
+                "summary": "Add DataModel field",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Model ID",
+                        "name": "model",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Field Definition",
+                        "name": "field",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.DataModel"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/model.DataModel"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/models/{model}/fields/{field}": {
+            "get": {
+                "description": "Retrieve a specific field definition",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "DataModel"
+                ],
+                "summary": "Get DataModel field",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Model ID",
+                        "name": "model",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Field ID or Column Name",
+                        "name": "field",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.DataModel"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Update a field definition",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "DataModel"
+                ],
+                "summary": "Update DataModel field",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Model ID",
+                        "name": "model",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Field ID or Column Name",
+                        "name": "field",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated Field Definition",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.DataModel"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.DataModel"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Remove a field definition from a model",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "DataModel"
+                ],
+                "summary": "Delete DataModel field",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Model ID",
+                        "name": "model",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Field ID or Column Name",
+                        "name": "field",
                         "in": "path",
                         "required": true
                     }
@@ -713,6 +1004,331 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/api/validation/custom-type": {
+            "post": {
+                "description": "Ensures custom_type_id points to an existing model with is_attribute_reference=true",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Validation - Custom Types"
+                ],
+                "summary": "Validate Custom Type Reference",
+                "parameters": [
+                    {
+                        "description": "DataModel with custom_type_id",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.DataModel"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/validation/data-model": {
+            "post": {
+                "description": "Validates field name, data type support, and orbital reference parameters",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Validation - Model Metadata"
+                ],
+                "summary": "Validate DataModel Field Definition \u0026 Data Type",
+                "parameters": [
+                    {
+                        "description": "DataModel Field to Validate",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.DataModel"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/validation/data/{model}": {
+            "post": {
+                "description": "Checks required fields, nullability, min/max length, regex patterns, numeric boundaries, and enum values",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Validation - Data Constraints"
+                ],
+                "summary": "Validate Full Record Data Against Model Constraints",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Model Name or ID",
+                        "name": "model",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Record Data to Validate",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/validation/model": {
+            "post": {
+                "description": "Validates full model definition, identifier naming, attributes, and primary key existence",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Validation - Model Metadata"
+                ],
+                "summary": "Validate Model Definition \u0026 Primary Keys",
+                "parameters": [
+                    {
+                        "description": "Model Definition to Validate",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.Model"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/validation/model-config": {
+            "post": {
+                "description": "Validates model_config name, identifier constraints, and status lifecycle enums",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Validation - Model Metadata"
+                ],
+                "summary": "Validate ModelConfig Structure",
+                "parameters": [
+                    {
+                        "description": "ModelConfig to Validate",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.ModelConfig"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/validation/partial-data/{model}": {
+            "post": {
+                "description": "Validates only provided fields for types, bounds, regex, and non-null constraints",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Validation - Data Constraints"
+                ],
+                "summary": "Validate Partial Record Data (PATCH)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Model Name or ID",
+                        "name": "model",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Partial Data to Validate",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/validation/plan": {
+            "post": {
+                "description": "Checks if migration plan contains destructive operations and confirms explicit allow_destructive flag",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Validation - Schema Safety"
+                ],
+                "summary": "Validate Schema Plan Safety \u0026 Destructive Guard",
+                "parameters": [
+                    {
+                        "description": "Plan payload with allow_destructive boolean",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -842,10 +1458,22 @@ const docTemplate = `{
                 "auto_increment": {
                     "type": "boolean"
                 },
+                "column_name": {
+                    "type": "string"
+                },
                 "comment": {
                     "type": "string"
                 },
+                "custom_type": {
+                    "type": "string"
+                },
                 "default": {},
+                "is_primary_key": {
+                    "type": "boolean"
+                },
+                "json_field": {
+                    "type": "string"
+                },
                 "length": {
                     "type": "integer"
                 },
@@ -858,8 +1486,11 @@ const docTemplate = `{
                 "precision": {
                     "type": "integer"
                 },
-                "primary_key": {
-                    "type": "boolean"
+                "ref_name": {
+                    "type": "string"
+                },
+                "reference": {
+                    "$ref": "#/definitions/model.OrbitalRefSpec"
                 },
                 "scale": {
                     "type": "integer"
@@ -874,6 +1505,177 @@ const docTemplate = `{
                     "$ref": "#/definitions/model.RuleSet"
                 }
             }
+        },
+        "model.DataModel": {
+            "type": "object",
+            "properties": {
+                "column_name": {
+                    "description": "Actual DB column/field",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "Creation",
+                    "type": "string"
+                },
+                "created_by": {
+                    "description": "Created By",
+                    "type": "string"
+                },
+                "custom_type": {
+                    "description": "Specific custom type (e.g. geo_point_radius)",
+                    "type": "string"
+                },
+                "custom_type_id": {
+                    "description": "Reference to model_config (Address struct)",
+                    "type": "string"
+                },
+                "data_type": {
+                    "description": "Logical datatype",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.DataType"
+                        }
+                    ]
+                },
+                "default_value": {
+                    "description": "Default value"
+                },
+                "description": {
+                    "description": "Description",
+                    "type": "string"
+                },
+                "enum": {
+                    "type": "array",
+                    "items": {}
+                },
+                "id": {
+                    "description": "Field ID",
+                    "type": "string"
+                },
+                "is_array": {
+                    "description": "Array field",
+                    "type": "boolean"
+                },
+                "is_generated": {
+                    "description": "System/DB generated",
+                    "type": "boolean"
+                },
+                "is_immutable": {
+                    "description": "Cannot update",
+                    "type": "boolean"
+                },
+                "is_nullable": {
+                    "description": "NULL allowed",
+                    "type": "boolean"
+                },
+                "is_orbital_reference": {
+                    "description": "Field references another model/field",
+                    "type": "boolean"
+                },
+                "is_primary_key": {
+                    "description": "Primary key",
+                    "type": "boolean"
+                },
+                "is_required": {
+                    "description": "Application mandatory",
+                    "type": "boolean"
+                },
+                "is_unique": {
+                    "description": "Unique",
+                    "type": "boolean"
+                },
+                "items": {
+                    "$ref": "#/definitions/model.ItemRule"
+                },
+                "json_field": {
+                    "description": "API/JSON property",
+                    "type": "string"
+                },
+                "load_with_children": {
+                    "description": "Automatically load this orbital relation on reads",
+                    "type": "boolean"
+                },
+                "max": {
+                    "type": "number"
+                },
+                "max_length": {
+                    "type": "integer"
+                },
+                "min": {
+                    "type": "number"
+                },
+                "min_length": {
+                    "type": "integer"
+                },
+                "model_id": {
+                    "description": "model_config reference (FK)",
+                    "type": "string"
+                },
+                "orbital_reference_field_id": {
+                    "description": "Referenced field",
+                    "type": "string"
+                },
+                "orbital_reference_model_id": {
+                    "description": "Referenced model",
+                    "type": "string"
+                },
+                "orbital_reference_validation": {
+                    "description": "exists, exists_active, exists_in_scope, not_exists",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.OrbitalValidationType"
+                        }
+                    ]
+                },
+                "pattern": {
+                    "type": "string"
+                },
+                "precision": {
+                    "type": "integer"
+                },
+                "ref_name": {
+                    "description": "Reference display name",
+                    "type": "string"
+                },
+                "reference": {
+                    "description": "Full reference specification",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.OrbitalRefSpec"
+                        }
+                    ]
+                },
+                "scale": {
+                    "type": "integer"
+                },
+                "status": {
+                    "description": "active / inactive",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.DataModelStatus"
+                        }
+                    ]
+                },
+                "updated_at": {
+                    "description": "Updated",
+                    "type": "string"
+                },
+                "updated_by": {
+                    "description": "Updated By",
+                    "type": "string"
+                }
+            }
+        },
+        "model.DataModelStatus": {
+            "type": "string",
+            "enum": [
+                "active",
+                "inactive"
+            ],
+            "x-enum-varnames": [
+                "DataModelStatusActive",
+                "DataModelStatusInactive"
+            ]
         },
         "model.DataType": {
             "type": "string",
@@ -891,7 +1693,11 @@ const docTemplate = `{
                 "JSON",
                 "UUID",
                 "BINARY",
-                "ARRAY"
+                "ARRAY",
+                "ENUM",
+                "EMAIL",
+                "CUSTOM",
+                "REFERENCE"
             ],
             "x-enum-varnames": [
                 "TypeString",
@@ -907,7 +1713,11 @@ const docTemplate = `{
                 "TypeJSON",
                 "TypeUUID",
                 "TypeBinary",
-                "TypeArray"
+                "TypeArray",
+                "TypeEnum",
+                "TypeEmail",
+                "TypeCustom",
+                "TypeReference"
             ]
         },
         "model.Index": {
@@ -945,6 +1755,23 @@ const docTemplate = `{
                 "IndexFullText"
             ]
         },
+        "model.ItemRule": {
+            "type": "object",
+            "properties": {
+                "max_length": {
+                    "type": "integer"
+                },
+                "min_length": {
+                    "type": "integer"
+                },
+                "pattern": {
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/model.DataType"
+                }
+            }
+        },
         "model.Model": {
             "type": "object",
             "properties": {
@@ -979,11 +1806,17 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "primary_key": {
+                    "$ref": "#/definitions/model.PrimaryKey"
+                },
                 "relations": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/model.Relation"
                     }
+                },
+                "schema": {
+                    "type": "string"
                 },
                 "status": {
                     "$ref": "#/definitions/model.ModelStatus"
@@ -994,6 +1827,9 @@ const docTemplate = `{
                 "storage_type": {
                     "$ref": "#/definitions/model.StorageType"
                 },
+                "table": {
+                    "type": "string"
+                },
                 "updated_at": {
                     "type": "string"
                 },
@@ -1001,6 +1837,89 @@ const docTemplate = `{
                     "type": "integer"
                 }
             }
+        },
+        "model.ModelConfig": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "description": "Creation timestamp",
+                    "type": "string"
+                },
+                "created_by": {
+                    "description": "Created By",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "Model description",
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_attribute_reference": {
+                    "description": "true means this model can be used as a model/attribute reference",
+                    "type": "boolean"
+                },
+                "is_system": {
+                    "description": "System-defined model",
+                    "type": "boolean"
+                },
+                "is_table": {
+                    "description": "true if mapped to table",
+                    "type": "boolean"
+                },
+                "name": {
+                    "description": "Name used by query engine",
+                    "type": "string"
+                },
+                "ref_name": {
+                    "description": "Optional reference name",
+                    "type": "string"
+                },
+                "schema": {
+                    "description": "Database schema (e.g. public, tenant_a, hr, sales)",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "draft, active, inactive, archived",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.ModelConfigStatus"
+                        }
+                    ]
+                },
+                "table": {
+                    "description": "Underlying table name",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "description": "Updated timestamp",
+                    "type": "string"
+                },
+                "updated_by": {
+                    "description": "Updated By",
+                    "type": "string"
+                },
+                "version": {
+                    "description": "Model configuration version",
+                    "type": "integer"
+                }
+            }
+        },
+        "model.ModelConfigStatus": {
+            "type": "string",
+            "enum": [
+                "draft",
+                "active",
+                "inactive",
+                "archived"
+            ],
+            "x-enum-varnames": [
+                "ModelConfigStatusDraft",
+                "ModelConfigStatusActive",
+                "ModelConfigStatusInactive",
+                "ModelConfigStatusArchived"
+            ]
         },
         "model.ModelStatus": {
             "type": "string",
@@ -1021,11 +1940,78 @@ const docTemplate = `{
                 "StatusDegraded"
             ]
         },
+        "model.OrbitalRefSpec": {
+            "type": "object",
+            "properties": {
+                "alias": {
+                    "type": "string"
+                },
+                "attribute": {
+                    "type": "string"
+                },
+                "model": {
+                    "type": "string"
+                },
+                "on_delete": {
+                    "type": "string"
+                },
+                "on_update": {
+                    "type": "string"
+                },
+                "relation_name": {
+                    "type": "string"
+                },
+                "schema": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.OrbitalValidationType": {
+            "type": "string",
+            "enum": [
+                "exists",
+                "exists_active",
+                "exists_in_scope",
+                "not_exists"
+            ],
+            "x-enum-varnames": [
+                "OrbitalValidationExists",
+                "OrbitalValidationExistsActive",
+                "OrbitalValidationExistsInScope",
+                "OrbitalValidationNotExists"
+            ]
+        },
+        "model.PrimaryKey": {
+            "type": "object",
+            "properties": {
+                "columns": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "model.Relation": {
             "type": "object",
             "properties": {
                 "foreign_key": {
                     "type": "string"
+                },
+                "junction_model": {
+                    "type": "string"
+                },
+                "junction_source_key": {
+                    "type": "string"
+                },
+                "junction_target_key": {
+                    "type": "string"
+                },
+                "load_with_children": {
+                    "type": "boolean"
                 },
                 "name": {
                     "type": "string"
@@ -1069,6 +2055,9 @@ const docTemplate = `{
                     "type": "array",
                     "items": {}
                 },
+                "items": {
+                    "$ref": "#/definitions/model.ItemRule"
+                },
                 "max": {
                     "type": "number"
                 },
@@ -1084,8 +2073,14 @@ const docTemplate = `{
                 "pattern": {
                     "type": "string"
                 },
+                "precision": {
+                    "type": "integer"
+                },
                 "required": {
                     "type": "boolean"
+                },
+                "scale": {
+                    "type": "integer"
                 }
             }
         },
@@ -1158,6 +2153,194 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "query.ConditionGroup": {
+            "type": "object",
+            "properties": {
+                "clause": {
+                    "type": "string"
+                },
+                "column": {
+                    "type": "string"
+                },
+                "conditions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/query.ConditionGroup"
+                    }
+                },
+                "operator": {
+                    "type": "string"
+                },
+                "parentCollectionName": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "value": {},
+                "value_type": {}
+            }
+        },
+        "query.FilterCondition": {
+            "type": "object",
+            "properties": {
+                "clause": {
+                    "type": "string"
+                },
+                "conditions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/query.ConditionGroup"
+                    }
+                }
+            }
+        },
+        "query.FilterParam": {
+            "type": "object",
+            "properties": {
+                "DefaultValue": {},
+                "ParamsName": {
+                    "type": "string"
+                },
+                "Paramsvalue": {},
+                "parmsDataType": {
+                    "type": "string"
+                }
+            }
+        },
+        "query.PaginationRequest": {
+            "type": "object",
+            "properties": {
+                "debug": {
+                    "type": "boolean"
+                },
+                "debug_include_args": {
+                    "type": "boolean"
+                },
+                "end": {
+                    "type": "integer"
+                },
+                "fields": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "filter": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/query.FilterCondition"
+                    }
+                },
+                "filterParam": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/query.FilterParam"
+                    }
+                },
+                "includeTotal": {
+                    "type": "boolean"
+                },
+                "relation_specs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/query.RelationSpec"
+                    }
+                },
+                "relations": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "slow_query_threshold_ms": {
+                    "type": "integer"
+                },
+                "sort": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/query.SortParam"
+                    }
+                },
+                "start": {
+                    "type": "integer"
+                }
+            }
+        },
+        "query.RelationSpec": {
+            "type": "object",
+            "properties": {
+                "conditions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "fields": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "load_with_children": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "on": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "order": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/query.Sort"
+                    }
+                },
+                "sub_relations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/query.RelationSpec"
+                    }
+                }
+            }
+        },
+        "query.Sort": {
+            "type": "object",
+            "properties": {
+                "field": {
+                    "type": "string"
+                },
+                "order": {
+                    "$ref": "#/definitions/query.SortOrder"
+                }
+            }
+        },
+        "query.SortOrder": {
+            "type": "string",
+            "enum": [
+                "ASC",
+                "DESC"
+            ],
+            "x-enum-varnames": [
+                "SortAsc",
+                "SortDesc"
+            ]
+        },
+        "query.SortParam": {
+            "type": "object",
+            "properties": {
+                "colId": {
+                    "type": "string"
+                },
+                "sort": {
+                    "type": "string"
                 }
             }
         },
@@ -1282,6 +2465,9 @@ const docTemplate = `{
                 },
                 "foreign_table": {
                     "type": "string"
+                },
+                "load_with_children": {
+                    "type": "boolean"
                 },
                 "name": {
                     "type": "string"

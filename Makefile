@@ -93,7 +93,7 @@ build: ## Build server and example binaries into bin/
 
 swagger: ## Regenerate Swagger API documentation using swag CLI
 	@echo "$(BLUE)Generating Swagger documentation...$(RESET)"
-	swag init -g cmd/server/main.go -o docs
+	swag init -g cmd/server/main.go -o docs --parseDependency --parseInternal
 
 clean: ## Remove built binaries and temporary files
 	@echo "$(BLUE)Cleaning build output...$(RESET)"

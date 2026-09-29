@@ -18,8 +18,9 @@
 //
 // File: main.go
 // Usage:
-//   Bootstraps the Fiber v2 HTTP server, wires database adapters (Postgres, MySQL, MongoDB, Memory),
-//   initializes model/schema/CRUD services, seeds initial demo schemas, and handles graceful shutdown.
+//
+//	Bootstraps the Fiber v2 HTTP server, wires database adapters (Postgres, MySQL, MongoDB, Memory),
+//	initializes model/schema/CRUD services, seeds initial demo schemas, and handles graceful shutdown.
 package main
 
 import (
@@ -47,8 +48,9 @@ import (
 // main starts the dynamic model engine server.
 //
 // Purpose:
-//   Initializes adapters, registers model and schema services, seeds demo data,
-//   starts Fiber HTTP listener on configured PORT, and waits for OS interruption signals.
+//
+//	Initializes adapters, registers model and schema services, seeds demo data,
+//	starts Fiber HTTP listener on configured PORT, and waits for OS interruption signals.
 //
 // Where it is used:
 //   - Entrypoint when running `go run ./cmd/server/main.go` or Docker containers.
@@ -83,6 +85,7 @@ func main() {
 	modelSvc := service.NewModelService(modelReg)
 	schemaSvc := service.NewSchemaService(modelReg, adapterReg)
 	crudEng := crud.NewEngine(adapterReg)
+	crudEng.SetModelResolver(modelSvc)
 
 	// Seed an initial example model (Employee)
 	seedExampleModel(modelSvc)
@@ -119,7 +122,8 @@ func main() {
 // seedExampleModel seeds sample model configs and field attributes into the model registry.
 //
 // Purpose:
-//   Populates initial Address (reusable type), Department, and Employee entities with orbital references.
+//
+//	Populates initial Address (reusable type), Department, and Employee entities with orbital references.
 //
 // Where it is used:
 //   - Called during server startup in main().
@@ -205,4 +209,3 @@ func seedExampleModel(ms *service.ModelService) {
 		fmt.Printf("Seed error: %v\n", err)
 	}
 }
-

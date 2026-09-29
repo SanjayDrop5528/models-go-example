@@ -2,8 +2,9 @@
 //
 // File: postgres_example_test.go
 // Usage:
-//   Executes tests across PostgreSQL Swagger endpoints, live dataset queries,
-//   validation sub-groups, Bun-style relational joins, and custom functions.
+//
+//	Executes tests across PostgreSQL Swagger endpoints, live dataset queries,
+//	validation sub-groups, Bun-style relational joins, and custom functions.
 package main
 
 import (
@@ -26,7 +27,8 @@ import (
 // TestPostgresExample runs the main PostgreSQL demonstration workflow.
 //
 // Purpose:
-//   Verifies that the complete PostgreSQL demo suite executes without runtime errors or panics.
+//
+//	Verifies that the complete PostgreSQL demo suite executes without runtime errors or panics.
 //
 // Where it is used:
 //   - In PostgreSQL example test suite runs.
@@ -41,7 +43,8 @@ func TestPostgresExample(t *testing.T) {
 // TestPostgresSwaggerEndpoints tests Swagger UI, OpenAPI spec, and seed HTTP routes.
 //
 // Purpose:
-//   Validates HTTP responses for Swagger UI documentation and seed endpoints.
+//
+//	Validates HTTP responses for Swagger UI documentation and seed endpoints.
 //
 // Where it is used:
 //   - In PostgreSQL example test suite.
@@ -99,7 +102,8 @@ func TestPostgresSwaggerEndpoints(t *testing.T) {
 // TestPostgres_Dataset_EndToEnd tests dataset compilation, execution, and CRUD lifecycle in PostgreSQL.
 //
 // Purpose:
-//   Tests creation, retrieval, execution, parameter binding, and deletion of SQL datasets.
+//
+//	Tests creation, retrieval, execution, parameter binding, and deletion of SQL datasets.
 //
 // Where it is used:
 //   - In PostgreSQL example test suite.
@@ -313,7 +317,8 @@ func TestPostgres_Dataset_EndToEnd(t *testing.T) {
 // TestPostgres_ModelConfigAndDataModel_Smoke tests ModelConfig and DataModel registration via HTTP.
 //
 // Purpose:
-//   Validates model configuration and field mapping lifecycle via HTTP REST routes.
+//
+//	Validates model configuration and field mapping lifecycle via HTTP REST routes.
 //
 // Where it is used:
 //   - In PostgreSQL example test suite.
@@ -421,7 +426,8 @@ func TestPostgres_ModelConfigAndDataModel_Smoke(t *testing.T) {
 // TestPostgres_Validation_AllEndpoints validates all validation endpoints and constraint categories.
 //
 // Purpose:
-//   Tests models, data constraints, custom types, orbital references, and plan safety validations.
+//
+//	Tests models, data constraints, custom types, orbital references, and plan safety validations.
 //
 // Where it is used:
 //   - In PostgreSQL example test suite.
@@ -570,7 +576,8 @@ func TestPostgres_Validation_AllEndpoints(t *testing.T) {
 // TestPostgres_BunStyleRelations_EndToEnd tests Bun-style relational loading and nested relations.
 //
 // Purpose:
-//   Tests belongs-to, has-one, has-many, and many-to-many relationship queries with live database joins.
+//
+//	Tests belongs-to, has-one, has-many, and many-to-many relationship queries with live database joins.
 //
 // Where it is used:
 //   - In PostgreSQL example integration test suite.
@@ -867,12 +874,36 @@ func TestPostgres_BunStyleRelations_EndToEnd(t *testing.T) {
 	if rowsNullFK[0]["Department"] != nil {
 		t.Fatalf("expected Department to be nil for null foreign key, got: %+v", rowsNullFK[0]["Department"])
 	}
+
+	// 9. Reverse orbital reference: Department <- Employee.department_id is a
+	// collection and must also work through a primary-key lookup.
+	deptRef := model.NewModelRef("test_rel_dept", "Department", "test_rel_departments", "id")
+	department, err := pgAdapter.FindOneWithQuery(ctx, deptRef, "dept_eng", query.New().
+		RelationWithOpts("Employees", query.RelationOpts{
+			Fields: []string{"id", "first_name", "department_id"},
+			Order:  []query.Sort{{Field: "id", Order: query.SortAsc}},
+		}))
+	if err != nil {
+		t.Fatalf("FindOneWithQuery with reverse orbital relation failed: %v", err)
+	}
+	employees, ok := department["Employees"].([]any)
+	if !ok {
+		t.Fatalf("expected Employees reverse relation to be an array, got %T: %+v", department["Employees"], department["Employees"])
+	}
+	if len(employees) != 1 {
+		t.Fatalf("expected one employee in dept_eng, got %d: %+v", len(employees), employees)
+	}
+	employee, ok := employees[0].(map[string]any)
+	if !ok || employee["first_name"] != "Sanjay" || employee["department_id"] != "dept_eng" {
+		t.Fatalf("unexpected reverse Employees value: %+v", employees[0])
+	}
 }
 
 // TestPostgres_Dataset_LiveExecution_CustomAndAggregateFunctions tests dataset live query execution with aggregates.
 //
 // Purpose:
-//   Tests compilation and live execution of dataset queries containing expressions, joins, and aggregates.
+//
+//	Tests compilation and live execution of dataset queries containing expressions, joins, and aggregates.
 //
 // Where it is used:
 //   - In PostgreSQL example integration test suite.
@@ -1121,5 +1152,3 @@ func TestPostgres_Dataset_LiveExecution_CustomAndAggregateFunctions(t *testing.T
 		t.Errorf("expected Marketing active_count=0 active_salary=0, got count=%v salary=%v", mkt["active_count"], mkt["active_salary"])
 	}
 }
-
-

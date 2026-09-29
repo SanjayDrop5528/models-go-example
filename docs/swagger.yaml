@@ -95,9 +95,17 @@ definitions:
     properties:
       auto_increment:
         type: boolean
+      column_name:
+        type: string
       comment:
         type: string
+      custom_type:
+        type: string
       default: {}
+      is_primary_key:
+        type: boolean
+      json_field:
+        type: string
       length:
         type: integer
       name:
@@ -106,8 +114,10 @@ definitions:
         type: boolean
       precision:
         type: integer
-      primary_key:
-        type: boolean
+      ref_name:
+        type: string
+      reference:
+        $ref: '#/definitions/model.OrbitalRefSpec'
       scale:
         type: integer
       type:
@@ -117,6 +127,123 @@ definitions:
       validation:
         $ref: '#/definitions/model.RuleSet'
     type: object
+  model.DataModel:
+    properties:
+      column_name:
+        description: Actual DB column/field
+        type: string
+      created_at:
+        description: Creation
+        type: string
+      created_by:
+        description: Created By
+        type: string
+      custom_type:
+        description: Specific custom type (e.g. geo_point_radius)
+        type: string
+      custom_type_id:
+        description: Reference to model_config (Address struct)
+        type: string
+      data_type:
+        allOf:
+        - $ref: '#/definitions/model.DataType'
+        description: Logical datatype
+      default_value:
+        description: Default value
+      description:
+        description: Description
+        type: string
+      enum:
+        items: {}
+        type: array
+      id:
+        description: Field ID
+        type: string
+      is_array:
+        description: Array field
+        type: boolean
+      is_generated:
+        description: System/DB generated
+        type: boolean
+      is_immutable:
+        description: Cannot update
+        type: boolean
+      is_nullable:
+        description: NULL allowed
+        type: boolean
+      is_orbital_reference:
+        description: Field references another model/field
+        type: boolean
+      is_primary_key:
+        description: Primary key
+        type: boolean
+      is_required:
+        description: Application mandatory
+        type: boolean
+      is_unique:
+        description: Unique
+        type: boolean
+      items:
+        $ref: '#/definitions/model.ItemRule'
+      json_field:
+        description: API/JSON property
+        type: string
+      load_with_children:
+        description: Automatically load this orbital relation on reads
+        type: boolean
+      max:
+        type: number
+      max_length:
+        type: integer
+      min:
+        type: number
+      min_length:
+        type: integer
+      model_id:
+        description: model_config reference (FK)
+        type: string
+      orbital_reference_field_id:
+        description: Referenced field
+        type: string
+      orbital_reference_model_id:
+        description: Referenced model
+        type: string
+      orbital_reference_validation:
+        allOf:
+        - $ref: '#/definitions/model.OrbitalValidationType'
+        description: exists, exists_active, exists_in_scope, not_exists
+      pattern:
+        type: string
+      precision:
+        type: integer
+      ref_name:
+        description: Reference display name
+        type: string
+      reference:
+        allOf:
+        - $ref: '#/definitions/model.OrbitalRefSpec'
+        description: Full reference specification
+      scale:
+        type: integer
+      status:
+        allOf:
+        - $ref: '#/definitions/model.DataModelStatus'
+        description: active / inactive
+      updated_at:
+        description: Updated
+        type: string
+      updated_by:
+        description: Updated By
+        type: string
+    type: object
+  model.DataModelStatus:
+    enum:
+    - active
+    - inactive
+    type: string
+    x-enum-varnames:
+    - DataModelStatusActive
+    - DataModelStatusInactive
   model.DataType:
     enum:
     - STRING
@@ -133,6 +260,10 @@ definitions:
     - UUID
     - BINARY
     - ARRAY
+    - ENUM
+    - EMAIL
+    - CUSTOM
+    - REFERENCE
     type: string
     x-enum-varnames:
     - TypeString
@@ -149,6 +280,10 @@ definitions:
     - TypeUUID
     - TypeBinary
     - TypeArray
+    - TypeEnum
+    - TypeEmail
+    - TypeCustom
+    - TypeReference
   model.Index:
     properties:
       columns:
@@ -174,6 +309,17 @@ definitions:
     - IndexHash
     - IndexUnique
     - IndexFullText
+  model.ItemRule:
+    properties:
+      max_length:
+        type: integer
+      min_length:
+        type: integer
+      pattern:
+        type: string
+      type:
+        $ref: '#/definitions/model.DataType'
+    type: object
   model.Model:
     properties:
       attributes:
@@ -197,21 +343,87 @@ definitions:
         type: object
       name:
         type: string
+      primary_key:
+        $ref: '#/definitions/model.PrimaryKey'
       relations:
         items:
           $ref: '#/definitions/model.Relation'
         type: array
+      schema:
+        type: string
       status:
         $ref: '#/definitions/model.ModelStatus'
       storage_name:
         type: string
       storage_type:
         $ref: '#/definitions/model.StorageType'
+      table:
+        type: string
       updated_at:
         type: string
       version:
         type: integer
     type: object
+  model.ModelConfig:
+    properties:
+      created_at:
+        description: Creation timestamp
+        type: string
+      created_by:
+        description: Created By
+        type: string
+      description:
+        description: Model description
+        type: string
+      id:
+        type: string
+      is_attribute_reference:
+        description: true means this model can be used as a model/attribute reference
+        type: boolean
+      is_system:
+        description: System-defined model
+        type: boolean
+      is_table:
+        description: true if mapped to table
+        type: boolean
+      name:
+        description: Name used by query engine
+        type: string
+      ref_name:
+        description: Optional reference name
+        type: string
+      schema:
+        description: Database schema (e.g. public, tenant_a, hr, sales)
+        type: string
+      status:
+        allOf:
+        - $ref: '#/definitions/model.ModelConfigStatus'
+        description: draft, active, inactive, archived
+      table:
+        description: Underlying table name
+        type: string
+      updated_at:
+        description: Updated timestamp
+        type: string
+      updated_by:
+        description: Updated By
+        type: string
+      version:
+        description: Model configuration version
+        type: integer
+    type: object
+  model.ModelConfigStatus:
+    enum:
+    - draft
+    - active
+    - inactive
+    - archived
+    type: string
+    x-enum-varnames:
+    - ModelConfigStatusDraft
+    - ModelConfigStatusActive
+    - ModelConfigStatusInactive
+    - ModelConfigStatusArchived
   model.ModelStatus:
     enum:
     - DRAFT
@@ -228,10 +440,56 @@ definitions:
     - StatusActive
     - StatusFailed
     - StatusDegraded
+  model.OrbitalRefSpec:
+    properties:
+      alias:
+        type: string
+      attribute:
+        type: string
+      model:
+        type: string
+      on_delete:
+        type: string
+      on_update:
+        type: string
+      relation_name:
+        type: string
+      schema:
+        type: string
+    type: object
+  model.OrbitalValidationType:
+    enum:
+    - exists
+    - exists_active
+    - exists_in_scope
+    - not_exists
+    type: string
+    x-enum-varnames:
+    - OrbitalValidationExists
+    - OrbitalValidationExistsActive
+    - OrbitalValidationExistsInScope
+    - OrbitalValidationNotExists
+  model.PrimaryKey:
+    properties:
+      columns:
+        items:
+          type: string
+        type: array
+      name:
+        type: string
+    type: object
   model.Relation:
     properties:
       foreign_key:
         type: string
+      junction_model:
+        type: string
+      junction_source_key:
+        type: string
+      junction_target_key:
+        type: string
+      load_with_children:
+        type: boolean
       name:
         type: string
       on_delete:
@@ -262,6 +520,8 @@ definitions:
       enum:
         items: {}
         type: array
+      items:
+        $ref: '#/definitions/model.ItemRule'
       max:
         type: number
       max_length:
@@ -272,8 +532,12 @@ definitions:
         type: integer
       pattern:
         type: string
+      precision:
+        type: integer
       required:
         type: boolean
+      scale:
+        type: integer
     type: object
   model.StorageType:
     enum:
@@ -323,6 +587,131 @@ definitions:
         items:
           type: string
         type: array
+    type: object
+  query.ConditionGroup:
+    properties:
+      clause:
+        type: string
+      column:
+        type: string
+      conditions:
+        items:
+          $ref: '#/definitions/query.ConditionGroup'
+        type: array
+      operator:
+        type: string
+      parentCollectionName:
+        type: string
+      type:
+        type: string
+      value: {}
+      value_type: {}
+    type: object
+  query.FilterCondition:
+    properties:
+      clause:
+        type: string
+      conditions:
+        items:
+          $ref: '#/definitions/query.ConditionGroup'
+        type: array
+    type: object
+  query.FilterParam:
+    properties:
+      DefaultValue: {}
+      ParamsName:
+        type: string
+      Paramsvalue: {}
+      parmsDataType:
+        type: string
+    type: object
+  query.PaginationRequest:
+    properties:
+      debug:
+        type: boolean
+      debug_include_args:
+        type: boolean
+      end:
+        type: integer
+      fields:
+        items:
+          type: string
+        type: array
+      filter:
+        items:
+          $ref: '#/definitions/query.FilterCondition'
+        type: array
+      filterParam:
+        items:
+          $ref: '#/definitions/query.FilterParam'
+        type: array
+      includeTotal:
+        type: boolean
+      relation_specs:
+        items:
+          $ref: '#/definitions/query.RelationSpec'
+        type: array
+      relations:
+        items:
+          type: string
+        type: array
+      slow_query_threshold_ms:
+        type: integer
+      sort:
+        items:
+          $ref: '#/definitions/query.SortParam'
+        type: array
+      start:
+        type: integer
+    type: object
+  query.RelationSpec:
+    properties:
+      conditions:
+        items:
+          type: string
+        type: array
+      fields:
+        items:
+          type: string
+        type: array
+      load_with_children:
+        type: boolean
+      name:
+        type: string
+      "on":
+        items:
+          type: string
+        type: array
+      order:
+        items:
+          $ref: '#/definitions/query.Sort'
+        type: array
+      sub_relations:
+        items:
+          $ref: '#/definitions/query.RelationSpec'
+        type: array
+    type: object
+  query.Sort:
+    properties:
+      field:
+        type: string
+      order:
+        $ref: '#/definitions/query.SortOrder'
+    type: object
+  query.SortOrder:
+    enum:
+    - ASC
+    - DESC
+    type: string
+    x-enum-varnames:
+    - SortAsc
+    - SortDesc
+  query.SortParam:
+    properties:
+      colId:
+        type: string
+      sort:
+        type: string
     type: object
   schema.Schema:
     properties:
@@ -405,6 +794,8 @@ definitions:
         type: string
       foreign_table:
         type: string
+      load_with_children:
+        type: boolean
       name:
         type: string
       on_delete:
@@ -474,6 +865,23 @@ paths:
         in: query
         name: sort
         type: string
+      - description: Orbital relations, comma-separated (e.g. Customer,OrderProducts)
+        in: query
+        name: relations
+        type: string
+      - description: Enable verbose runtime query logging
+        in: query
+        name: debug
+        type: boolean
+      - description: Include filter and bound values in debug logs (values are redacted
+          by default)
+        in: query
+        name: debug_include_args
+        type: boolean
+      - description: Log a slow-query event when runtime reaches this duration
+        in: query
+        name: slow_query_threshold_ms
+        type: integer
       produces:
       - application/json
       responses:
@@ -553,6 +961,23 @@ paths:
         name: id
         required: true
         type: string
+      - description: Orbital relations, comma-separated (e.g. Customer,OrderProducts)
+        in: query
+        name: relations
+        type: string
+      - description: Enable verbose runtime query logging
+        in: query
+        name: debug
+        type: boolean
+      - description: Include filter and bound values in debug logs (values are redacted
+          by default)
+        in: query
+        name: debug_include_args
+        type: boolean
+      - description: Log a slow-query event when runtime reaches this duration
+        in: query
+        name: slow_query_threshold_ms
+        type: integer
       produces:
       - application/json
       responses:
@@ -628,6 +1053,35 @@ paths:
             additionalProperties: true
             type: object
       summary: Full update record
+      tags:
+      - Data
+  /api/data/{model}/filter:
+    post:
+      consumes:
+      - application/json
+      description: Filter and query records via structured JSON payload (compatible
+        with AG-Grid and PaginationRequest filter criteria)
+      parameters:
+      - description: Model Name or ID
+        in: path
+        name: model
+        required: true
+        type: string
+      - description: Pagination and Filter Payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/query.PaginationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Post Filter Query
       tags:
       - Data
   /api/models:
@@ -745,6 +1199,147 @@ paths:
       summary: Update model draft
       tags:
       - Models
+  /api/models/{model}/fields:
+    get:
+      description: Get all field definitions belonging to a model
+      parameters:
+      - description: Model ID
+        in: path
+        name: model
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: List DataModel fields for a model
+      tags:
+      - DataModel
+    post:
+      consumes:
+      - application/json
+      description: Define a new column / JSON field for a model
+      parameters:
+      - description: Model ID
+        in: path
+        name: model
+        required: true
+        type: string
+      - description: Field Definition
+        in: body
+        name: field
+        required: true
+        schema:
+          $ref: '#/definitions/model.DataModel'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.DataModel'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Add DataModel field
+      tags:
+      - DataModel
+  /api/models/{model}/fields/{field}:
+    delete:
+      description: Remove a field definition from a model
+      parameters:
+      - description: Model ID
+        in: path
+        name: model
+        required: true
+        type: string
+      - description: Field ID or Column Name
+        in: path
+        name: field
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete DataModel field
+      tags:
+      - DataModel
+    get:
+      description: Retrieve a specific field definition
+      parameters:
+      - description: Model ID
+        in: path
+        name: model
+        required: true
+        type: string
+      - description: Field ID or Column Name
+        in: path
+        name: field
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.DataModel'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get DataModel field
+      tags:
+      - DataModel
+    put:
+      consumes:
+      - application/json
+      description: Update a field definition
+      parameters:
+      - description: Model ID
+        in: path
+        name: model
+        required: true
+        type: string
+      - description: Field ID or Column Name
+        in: path
+        name: field
+        required: true
+        type: string
+      - description: Updated Field Definition
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.DataModel'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.DataModel'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Update DataModel field
+      tags:
+      - DataModel
   /api/models/{model}/schema:
     get:
       description: Introspect the physical live schema in the target database
@@ -890,4 +1485,253 @@ paths:
       summary: Sync model from DB
       tags:
       - Schema
+  /api/models/reinit:
+    post:
+      consumes:
+      - application/json
+      description: Reconstruct and compile all or specified models from ModelConfig
+        and DataModel metadata
+      parameters:
+      - description: Optional Model IDs filter
+        in: body
+        name: body
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Re-initialize models
+      tags:
+      - Models
+  /api/validation/custom-type:
+    post:
+      consumes:
+      - application/json
+      description: Ensures custom_type_id points to an existing model with is_attribute_reference=true
+      parameters:
+      - description: DataModel with custom_type_id
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.DataModel'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Validate Custom Type Reference
+      tags:
+      - Validation - Custom Types
+  /api/validation/data-model:
+    post:
+      consumes:
+      - application/json
+      description: Validates field name, data type support, and orbital reference
+        parameters
+      parameters:
+      - description: DataModel Field to Validate
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.DataModel'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Validate DataModel Field Definition & Data Type
+      tags:
+      - Validation - Model Metadata
+  /api/validation/data/{model}:
+    post:
+      consumes:
+      - application/json
+      description: Checks required fields, nullability, min/max length, regex patterns,
+        numeric boundaries, and enum values
+      parameters:
+      - description: Model Name or ID
+        in: path
+        name: model
+        required: true
+        type: string
+      - description: Record Data to Validate
+        in: body
+        name: body
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Validate Full Record Data Against Model Constraints
+      tags:
+      - Validation - Data Constraints
+  /api/validation/model:
+    post:
+      consumes:
+      - application/json
+      description: Validates full model definition, identifier naming, attributes,
+        and primary key existence
+      parameters:
+      - description: Model Definition to Validate
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.Model'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Validate Model Definition & Primary Keys
+      tags:
+      - Validation - Model Metadata
+  /api/validation/model-config:
+    post:
+      consumes:
+      - application/json
+      description: Validates model_config name, identifier constraints, and status
+        lifecycle enums
+      parameters:
+      - description: ModelConfig to Validate
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.ModelConfig'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Validate ModelConfig Structure
+      tags:
+      - Validation - Model Metadata
+  /api/validation/partial-data/{model}:
+    post:
+      consumes:
+      - application/json
+      description: Validates only provided fields for types, bounds, regex, and non-null
+        constraints
+      parameters:
+      - description: Model Name or ID
+        in: path
+        name: model
+        required: true
+        type: string
+      - description: Partial Data to Validate
+        in: body
+        name: body
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Validate Partial Record Data (PATCH)
+      tags:
+      - Validation - Data Constraints
+  /api/validation/plan:
+    post:
+      consumes:
+      - application/json
+      description: Checks if migration plan contains destructive operations and confirms
+        explicit allow_destructive flag
+      parameters:
+      - description: Plan payload with allow_destructive boolean
+        in: body
+        name: body
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Validate Schema Plan Safety & Destructive Guard
+      tags:
+      - Validation - Schema Safety
 swagger: "2.0"

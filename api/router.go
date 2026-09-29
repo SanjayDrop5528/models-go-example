@@ -2,8 +2,9 @@
 //
 // File: router.go
 // Usage:
-//   Defines the HTTP REST API router, Swagger endpoint mappings, CRUD controller handlers,
-//   schema diff/apply preview endpoints, and data/model validation endpoints.
+//
+//	Defines the HTTP REST API router, Swagger endpoint mappings, CRUD controller handlers,
+//	schema diff/apply preview endpoints, and data/model validation endpoints.
 package api
 
 import (
@@ -38,8 +39,9 @@ type Router struct {
 // NewApp creates and configures a new Fiber App instance with all routes registered.
 //
 // Purpose:
-//   Constructs the Fiber HTTP application, registers middleware (CORS, Recover, Logger),
-//   binds Swagger UI documentation routes, and registers all API endpoint handlers.
+//
+//	Constructs the Fiber HTTP application, registers middleware (CORS, Recover, Logger),
+//	binds Swagger UI documentation routes, and registers all API endpoint handlers.
 //
 // Where it is used:
 //   - In cmd/server/main.go to initialize the runnable HTTP server.
@@ -85,8 +87,9 @@ func NewApp(ms *service.ModelService, ss *service.SchemaService, ce *crud.Engine
 // Register attaches the API route groups to the provided Fiber router.
 //
 // Purpose:
-//   Wires all model management, schema migration, CRUD data manipulation, and validation endpoints
-//   under the /api prefix.
+//
+//	Wires all model management, schema migration, CRUD data manipulation, and validation endpoints
+//	under the /api prefix.
 //
 // Where it is used:
 //   - In NewApp to mount routing definitions onto the Fiber router.
@@ -275,9 +278,9 @@ func (r *Router) reinitModels(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 	return c.JSON(fiber.Map{
-		"status":         "SUCCESS",
-		"message":        fmt.Sprintf("Successfully re-initialized %d models", len(reinitialized)),
-		"reinit_models":  reinitialized,
+		"status":        "SUCCESS",
+		"message":       fmt.Sprintf("Successfully re-initialized %d models", len(reinitialized)),
+		"reinit_models": reinitialized,
 	})
 }
 
@@ -524,6 +527,10 @@ func (r *Router) createRecord(c *fiber.Ctx) error {
 // @Param        limit   query     int     false  "Page limit"
 // @Param        offset  query     int     false  "Page offset"
 // @Param        sort    query     string  false  "Sort fields (e.g. name,-age)"
+// @Param        relations query   string  false  "Orbital relations, comma-separated (e.g. Customer,OrderProducts)"
+// @Param        debug   query     bool    false  "Enable verbose runtime query logging"
+// @Param        debug_include_args query bool false "Include filter and bound values in debug logs (values are redacted by default)"
+// @Param        slow_query_threshold_ms query int false "Log a slow-query event when runtime reaches this duration"
 // @Success      200     {object}  map[string]any
 // @Router       /api/data/{model} [get]
 func (r *Router) findRecords(c *fiber.Ctx) error {
@@ -592,6 +599,10 @@ func (r *Router) filterRecords(c *fiber.Ctx) error {
 // @Produce      json
 // @Param        model  path      string  true  "Model Name or ID"
 // @Param        id     path      string  true  "Record ID"
+// @Param        relations query  string  false "Orbital relations, comma-separated (e.g. Customer,OrderProducts)"
+// @Param        debug  query     bool    false "Enable verbose runtime query logging"
+// @Param        debug_include_args query bool false "Include filter and bound values in debug logs (values are redacted by default)"
+// @Param        slow_query_threshold_ms query int false "Log a slow-query event when runtime reaches this duration"
 // @Success      200    {object}  map[string]any
 // @Router       /api/data/{model}/{id} [get]
 func (r *Router) findRecordByID(c *fiber.Ctx) error {
@@ -602,7 +613,16 @@ func (r *Router) findRecordByID(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusNotFound, fmt.Sprintf("Model '%s' is not active or does not exist: %v", modelID, err))
 	}
 
-	record, err := r.crudEngine.FindOne(c.Context(), m, id)
+	q := query.NewQuery()
+	q.Debug, _ = strconv.ParseBool(c.Query("debug"))
+	q.DebugIncludeArgs, _ = strconv.ParseBool(c.Query("debug_include_args"))
+	q.SlowQueryThresholdMS, _ = strconv.Atoi(c.Query("slow_query_threshold_ms"))
+	for _, relation := range strings.Split(c.Query("relations"), ",") {
+		if relation = strings.TrimSpace(relation); relation != "" {
+			q = q.Relation(relation)
+		}
+	}
+	record, err := r.crudEngine.FindOneWithQuery(c.Context(), m, id, q)
 	if err != nil {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	}
@@ -697,7 +717,8 @@ func (r *Router) deleteRecord(c *fiber.Ctx) error {
 // parseQuery extracts filtering, pagination, and sorting parameters from HTTP query arguments.
 //
 // Purpose:
-//   Translates query string parameters (?limit=10&offset=0&sort=-name&field=val) into a query.Query AST.
+//
+//	Translates query string parameters (?limit=10&offset=0&sort=-name&field=val) into a query.Query AST.
 //
 // Where it is used:
 //   - In findRecords handler for data collection retrieval.
@@ -706,6 +727,10 @@ func (r *Router) deleteRecord(c *fiber.Ctx) error {
 //   - When parsing HTTP request queries for dynamic record filtering.
 func (r *Router) parseQuery(c *fiber.Ctx) query.Query {
 	q := query.NewQuery()
+	q.CountTotal = true
+	q.Debug, _ = strconv.ParseBool(c.Query("debug"))
+	q.DebugIncludeArgs, _ = strconv.ParseBool(c.Query("debug_include_args"))
+	q.SlowQueryThresholdMS, _ = strconv.Atoi(c.Query("slow_query_threshold_ms"))
 
 	if limitStr := c.Query("limit"); limitStr != "" {
 		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
@@ -729,11 +754,25 @@ func (r *Router) parseQuery(c *fiber.Ctx) query.Query {
 			}
 		}
 	}
+	if fieldsStr := c.Query("fields"); fieldsStr != "" {
+		for _, field := range strings.Split(fieldsStr, ",") {
+			if field = strings.TrimSpace(field); field != "" {
+				q = q.Column(field)
+			}
+		}
+	}
+	if relationsStr := c.Query("relations"); relationsStr != "" {
+		for _, relation := range strings.Split(relationsStr, ",") {
+			if relation = strings.TrimSpace(relation); relation != "" {
+				q = q.Relation(relation)
+			}
+		}
+	}
 
 	c.Context().QueryArgs().VisitAll(func(key, val []byte) {
 		k := string(key)
 		v := string(val)
-		if k == "limit" || k == "offset" || k == "sort" || k == "fields" {
+		if k == "limit" || k == "offset" || k == "sort" || k == "fields" || k == "relations" || k == "debug" || k == "debug_include_args" || k == "slow_query_threshold_ms" {
 			return
 		}
 		q = q.Where(k, query.OpEq, v)
