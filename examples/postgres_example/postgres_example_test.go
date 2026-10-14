@@ -957,8 +957,8 @@ func TestPostgres_Dataset_LiveExecution_CustomAndAggregateFunctions(t *testing.T
 	// 1. Test Row Calculations execution against live PostgreSQL
 	dsCalc := &domain.DataSet{
 		BaseCollection: domain.BaseCollection{Collection: "test_calc_employees"},
-		Filter: map[string]any{
-			"test_calc_employees.id": 1,
+		Filter: []any{
+			map[string]any{"test_calc_employees.id": 1},
 		},
 		CustomColumns: []domain.CustomColumn{
 			{CustomColumnName: "col_add", CustomAggregateFnName: "ADD", Fields: []domain.DataSetCustomField{{TableName: "test_calc_employees", FieldName: "salary"}, {TableName: "_LITERAL_", FieldName: "1000", IsLiteral: true}}},
