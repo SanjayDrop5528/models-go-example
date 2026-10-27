@@ -528,13 +528,21 @@ func handlePostgresAPI(w http.ResponseWriter, r *http.Request, engine *project.E
 	if path == "models" {
 		if r.Method == http.MethodGet {
 			statusFilter := r.URL.Query().Get("status")
+			isAttrRefFilter := r.URL.Query().Get("is_attribute_reference")
 			configs := engine.ListModelConfigs(ctx)
-			if statusFilter != "" {
+			if statusFilter != "" || isAttrRefFilter != "" {
 				var filtered []*model.ModelConfig
 				for _, cfg := range configs {
-					if strings.EqualFold(string(cfg.Status), statusFilter) {
-						filtered = append(filtered, cfg)
+					if statusFilter != "" && !strings.EqualFold(string(cfg.Status), statusFilter) {
+						continue
 					}
+					if isAttrRefFilter != "" {
+						isRef := strings.EqualFold(isAttrRefFilter, "true") || isAttrRefFilter == "1"
+						if cfg.IsAttributeReference != isRef {
+							continue
+						}
+					}
+					filtered = append(filtered, cfg)
 				}
 				configs = filtered
 			}
